@@ -1,6 +1,6 @@
 {
-  "name": "Neggo - Marketplace P2P",
-  "description": "Plataforma de classificados P2P focada em serviços e produtos com negociação via chat.",
+  "name": "Neggo",
+  "description": "Neggo - O marketplace P2P definitivo para produtos e serviços locais com negociação direta e segura.",
   "requestFramePermissions": [
     "geolocation"
   ]

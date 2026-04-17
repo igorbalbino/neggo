@@ -3,9 +3,11 @@ import { NavLink } from 'react-router-dom';
 import { Home, Search, PlusCircle, MessageCircle, User, Zap, ShieldCheck } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTranslation } from '../i18n/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Sidebar: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navItems = [
     { icon: Home, label: 'Home', path: '/app' },
     { icon: Search, label: t('see_all'), path: '/explore' },
@@ -44,26 +46,28 @@ export const Sidebar: React.FC = () => {
           {t('create_ad')}
         </NavLink>
 
-        <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
-          <div className="flex items-center gap-2 text-yellow-700 font-bold text-xs mb-1">
-            <Zap size={14} fill="currentColor" />
-            Plano Pro Ativo
+        {user?.plan && user.plan !== 'Membro' && user.plan !== 'Free' && (
+          <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
+            <div className="flex items-center gap-2 text-yellow-700 font-bold text-xs mb-1">
+              <Zap size={14} fill="currentColor" />
+              Plano {user.plan} Ativo
+            </div>
+            <p className="text-[10px] text-yellow-800 opacity-70 leading-tight">
+              Aproveite todos os benefícios do seu plano.
+            </p>
           </div>
-          <p className="text-[10px] text-yellow-800 opacity-70 leading-tight">
-            Você tem 8 boosts disponíveis este mês.
-          </p>
-        </div>
+        )}
 
         <div className="flex items-center gap-3 p-2">
           <img 
-            src="https://i.pravatar.cc/150?u=marcos" 
+            src={user?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || '')}&background=random`} 
             className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
             alt="User"
             referrerPolicy="no-referrer"
           />
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 truncate">Marcos Silva</p>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Membro Pro</p>
+            <p className="text-sm font-bold text-gray-900 truncate">{user?.name}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user?.plan || 'Membro'}</p>
           </div>
         </div>
       </div>

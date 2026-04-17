@@ -1,7 +1,7 @@
 import { Ad, User, Location, Plan } from '../types';
 import { authenticateWithFirebase } from './firebase';
 
-const API_BASE_URL = 'https://neggo-api.creatioinc.com';
+const API_BASE_URL = 'http://localhost:8000/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -100,6 +100,31 @@ class ApiService {
     return this.request<User>('/profile');
   }
 
+  async updateProfile(data: Partial<User>): Promise<User> {
+    return this.request<User>('/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Files/Images
+  async uploadImage(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        ...(this.token ? { 'Authorization': `Bearer ${this.token}` } : {}),
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Upload failed');
+    return result.data;
+  }
+
   // Chats
   async getChats(): Promise<any[]> {
     return this.request<any[]>('/chats');
@@ -116,20 +141,40 @@ class ApiService {
     });
   }
 
+  async startChat(adId: string): Promise<{ id: string }> {
+    return this.request<{ id: string }>(`/ads/${adId}/chat`, {
+      method: 'POST',
+    });
+  }
+
   // Plans
   async getPlans(): Promise<Plan[]> {
     return this.request<Plan[]>('/plans');
   }
 
-  async buyPlan(planId: string): Promise<void> {
-    await this.request<void>(`/plans/${planId}/buy`, {
+  async buyPlan(planId: string): Promise<{ checkoutUrl?: string }> {
+    return this.request<{ checkoutUrl?: string }>(`/plans/${planId}/buy`, {
       method: 'POST',
     });
   }
 
   // Boosts
-  async boostAd(adId: string): Promise<void> {
-    await this.request<void>(`/ads/${adId}/boost`, {
+  async boostAd(adId: string): Promise<{ checkoutUrl?: string }> {
+    return this.request<{ checkoutUrl?: string }>(`/ads/${adId}/boost`, {
+      method: 'POST',
+    });
+  }
+
+  async getMyAds(): Promise<Ad[]> {
+    return this.request<Ad[]>('/my-ads');
+  }
+
+  async getFavorites(): Promise<Ad[]> {
+    return this.request<Ad[]>('/favorites');
+  }
+
+  async toggleFavorite(adId: string): Promise<void> {
+    await this.request<void>(`/ads/${adId}/favorite`, {
       method: 'POST',
     });
   }

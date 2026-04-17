@@ -11,6 +11,17 @@ export interface User {
   rating: number;
   isPro: boolean;
   phone?: string;
+  plan?: string;
+  country?: string;
+  preferences?: {
+    contactMode?: 'chat' | 'both';
+    showPhoto?: boolean;
+  };
+  stats?: {
+    active: number;
+    sold: number;
+    reviews: number;
+  };
 }
 
 export interface Location {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Package, Briefcase, Camera, MapPin, Check, Zap, Plus, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -6,15 +6,28 @@ import { cn } from '../lib/utils';
 import { useTranslation } from '../i18n/LanguageContext';
 import { Location } from '../types';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export const CreateAd: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [locationMode, setLocationMode] = useState<'current' | 'multiple' | 'national'>('current');
   const [newCity, setNewCity] = useState('');
   const [newState, setNewState] = useState('');
   
+  const categories = [
+    { id: 'electronics', label: t('cat_electronics'), icon: Package },
+    { id: 'home', label: t('cat_home'), icon: Package },
+    { id: 'fashion', label: t('cat_fashion'), icon: Package },
+    { id: 'sports', label: t('cat_sports'), icon: Package },
+    { id: 'services', label: t('cat_services'), icon: Briefcase },
+    { id: 'health', label: t('cat_health'), icon: Package },
+    { id: 'education', label: t('cat_education'), icon: Briefcase },
+    { id: 'tech', label: t('cat_tech'), icon: Briefcase },
+  ];
+
   const [formData, setFormData] = useState({
     type: '' as 'product' | 'service' | '',
     title: '',
@@ -25,7 +38,16 @@ export const CreateAd: React.FC = () => {
     locations: [] as Location[],
     condition: 'used',
     serviceType: 'remote',
+    images: [] as string[],
+    country: user?.country || '',
   });
+
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const adImagesInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePriceChange = (val: string) => {
+    setFormData({ ...formData, price: val });
+  };
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
@@ -55,7 +77,11 @@ export const CreateAd: React.FC = () => {
     setIsPublishing(true);
     setPublishError('');
     try {
-      await api.createAd(formData);
+      const finalPrice = formData.price === '' || isNaN(Number(formData.price)) ? 'negotiable' : Number(formData.price);
+      await api.createAd({
+        ...formData,
+        price: finalPrice
+      });
       setStep(4);
     } catch (err: any) {
       setPublishError(err.message || 'Erro ao publicar anúncio. Tente novamente.');
@@ -118,6 +144,43 @@ export const CreateAd: React.FC = () => {
           >
             <h2 className="text-2xl font-black text-gray-900">{t('basic_details')}</h2>
             <div className="space-y-4">
+              {(!user?.country && !formData.country) && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">País</label>
+                  <select 
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    className="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 text-sm font-medium focus:ring-2 focus:ring-blue-500 appearance-none"
+                    required
+                  >
+                    <option value="">Selecione o país</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Paraguai">Paraguai</option>
+                    <option value="Argentina">Argentina</option>
+                    <option value="Uruguai">Uruguai</option>
+                  </select>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('category')}</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setFormData({ ...formData, category: cat.id })}
+                      className={cn(
+                        "p-3 rounded-xl border-2 text-sm font-bold transition-all text-left flex items-center gap-2",
+                        formData.category === cat.id ? "border-blue-600 bg-blue-50 text-blue-600" : "border-gray-100 text-gray-600"
+                      )}
+                    >
+                      <cat.icon size={16} />
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 ml-1">{t('ad_title_label')}</label>
                 <input 
@@ -238,7 +301,7 @@ export const CreateAd: React.FC = () => {
             </div>
             <button 
               onClick={nextStep}
-              disabled={!formData.title || !formData.price || (!formData.isNational && formData.locations.length === 0)}
+              disabled={!formData.title || !formData.category || (!formData.isNational && formData.locations.length === 0) || (!user?.country && !formData.country)}
               className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-transform disabled:opacity-50"
             >
               {t('continue')}
@@ -255,15 +318,47 @@ export const CreateAd: React.FC = () => {
           >
             <h2 className="text-2xl font-black text-gray-900">{t('photos_conditions')}</h2>
             
-            <div className="grid grid-cols-3 gap-3">
-              <button className="aspect-square bg-gray-100 rounded-2xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 active:bg-gray-200 transition-colors">
-                <Camera size={24} className="mb-1" />
-                <span className="text-[10px] font-bold">Adicionar</span>
-              </button>
-              {[1, 2].map(i => (
-                <div key={i} className="aspect-square bg-gray-200 rounded-2xl"></div>
-              ))}
-            </div>
+              <div className="grid grid-cols-3 gap-3">
+                <button 
+                  onClick={() => adImagesInputRef.current?.click()}
+                  disabled={isUploadingImages}
+                  className="aspect-square bg-gray-100 rounded-2xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 active:bg-gray-200 transition-colors"
+                >
+                  {isUploadingImages ? <Loader2 size={18} className="animate-spin" /> : <Camera size={24} className="mb-1" />}
+                  <span className="text-[10px] font-bold">Adicionar</span>
+                </button>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  ref={adImagesInputRef} 
+                  accept="image/*"
+                  multiple
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files || []) as File[];
+                    if (files.length === 0) return;
+                    setIsUploadingImages(true);
+                    try {
+                      const urls = await Promise.all(files.map((file: File) => api.uploadImage(file).then(res => res.url)));
+                      setFormData({ ...formData, images: [...formData.images, ...urls] });
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setIsUploadingImages(false);
+                    }
+                  }}
+                />
+                {formData.images.map((url, i) => (
+                  <div key={i} className="relative aspect-square">
+                    <img src={url} className="w-full h-full object-cover rounded-2xl" alt="Ad Preview" referrerPolicy="no-referrer" />
+                    <button 
+                      onClick={() => setFormData({ ...formData, images: formData.images.filter((_, idx) => idx !== i) })}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
 
             {formData.type === 'product' ? (
               <div className="space-y-4">
@@ -323,13 +418,13 @@ export const CreateAd: React.FC = () => {
 
             <button 
               onClick={handlePublish}
-              disabled={isPublishing}
-              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-transform flex items-center justify-center gap-2"
+              disabled={isPublishing || formData.images.length === 0}
+              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isPublishing ? (
                 <Loader2 className="animate-spin" size={20} />
               ) : (
-                t('publish_ad_btn')
+                formData.images.length === 0 ? 'Adicione pelo menos 1 foto' : t('publish_ad_btn')
               )}
             </button>
           </motion.div>

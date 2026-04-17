@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Mail, Lock, ChevronRight, Loader2 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,10 +17,10 @@ export const Login: React.FC = () => {
 
   useEffect(() => {
     // If already authenticated, go to app
-    if (api.isAuthenticated()) {
+    if (user) {
       navigate('/app');
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export const Login: React.FC = () => {
     setError('');
 
     try {
-      await api.login(email, password);
+      await login(email, password);
       navigate('/app');
     } catch (err: any) {
       setError(err.message || 'Falha ao entrar. Verifique suas credenciais.');

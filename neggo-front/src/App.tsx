@@ -7,6 +7,10 @@ import { ChatRoom } from './pages/ChatRoom';
 import { CreateAd } from './pages/CreateAd';
 import { Profile } from './pages/Profile';
 import { Plans } from './pages/Plans';
+import { MyAds } from './pages/MyAds';
+import { Favorites } from './pages/Favorites';
+import { Settings } from './pages/Settings';
+import { Explore } from './pages/Explore';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { LandingPage } from './pages/LandingPage';
@@ -18,10 +22,24 @@ import { api } from './services/api';
 import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from './components/SEO';
 import { cn } from './lib/utils';
+import { AuthProvider } from './contexts/AuthContext';
+
+import { useAuth } from './contexts/AuthContext';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!api.isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return <>{children}</>;
 };
@@ -52,9 +70,13 @@ function AppContent() {
             <Route path="/ad/:id" element={<ProtectedRoute><AdDetail /></ProtectedRoute>} />
             <Route path="/chats" element={<ProtectedRoute><ChatList /></ProtectedRoute>} />
             <Route path="/chat/room/:id" element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
+            <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreateAd /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
+            <Route path="/my-ads" element={<ProtectedRoute><MyAds /></ProtectedRoute>} />
+            <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Routes>
         </AnimatePresence>
         {!shouldHideNav && <BottomNav />}
@@ -67,10 +89,12 @@ export default function App() {
   return (
     <HelmetProvider>
       <LanguageProvider>
-        <Router>
-          <SEO />
-          <AppContent />
-        </Router>
+        <AuthProvider>
+          <Router>
+            <SEO />
+            <AppContent />
+          </Router>
+        </AuthProvider>
       </LanguageProvider>
     </HelmetProvider>
   );

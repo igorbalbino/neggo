@@ -16,21 +16,29 @@ class ChatController extends Controller
     {
         $userId = $request->user()->id;
         $chats = Chat::query()
-            ->with('ad')
+            ->with(['ad', 'buyer:id,name,photo_url', 'seller:id,name,photo_url'])
             ->where(fn ($query) => $query->where('buyer_id', $userId)->orWhere('seller_id', $userId))
             ->latest('updated_at')
             ->get()
-            ->map(fn (Chat $chat) => [
-                'id' => (string) $chat->id,
-                'adId' => (string) $chat->ad_id,
-                'adTitle' => $chat->ad?->title,
-                'adImageUrl' => $chat->ad?->images[0] ?? null,
-                'buyerId' => (string) $chat->buyer_id,
-                'sellerId' => (string) $chat->seller_id,
-                'lastMessage' => $chat->last_message,
-                'status' => $chat->status,
-                'updatedAt' => $chat->updated_at?->toIso8601String(),
-            ]);
+            ->map(function (Chat $chat) use ($userId): array {
+                $otherUser = (int) $chat->buyer_id === (int) $userId ? $chat->seller : $chat->buyer;
+
+                return [
+                    'id' => (string) $chat->id,
+                    'adId' => (string) $chat->ad_id,
+                    'adTitle' => $chat->ad?->title,
+                    'adImageUrl' => $chat->ad?->images[0] ?? null,
+                    'buyerId' => (string) $chat->buyer_id,
+                    'sellerId' => (string) $chat->seller_id,
+                    'lastMessage' => $chat->last_message,
+                    'status' => $chat->status,
+                    'updatedAt' => $chat->updated_at?->toIso8601String(),
+                    'userName' => $otherUser?->name,
+                    'userPhoto' => $otherUser?->photo_url ?: 'https://ui-avatars.com/api/?name='.urlencode($otherUser?->name ?: 'User'),
+                    'time' => $chat->updated_at?->format('H:i'),
+                    'unread' => 0,
+                ];
+            });
 
         return $this->ok($chats);
     }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use App\Models\User;
+use App\Models\UserPlan;
 
 class AuthController extends Controller
 {
@@ -55,8 +56,26 @@ class AuthController extends Controller
                 'rating' => $user->rating,
                 'isPro' => $user->is_pro,
                 'phone' => $user->phone,
+                'plan' => $this->resolveCurrentPlanName((int) $user->id),
             ],
         ]);
+    }
+
+    private function resolveCurrentPlanName(int $userId): string
+    {
+        $planName = UserPlan::query()
+            ->with('plan:id,name')
+            ->where('user_id', $userId)
+            ->where('status', 'active')
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+            })
+            ->latest('id')
+            ->first()
+            ?->plan
+            ?->name;
+
+        return $planName ?: 'Free';
     }
 
     private function buildChatToken(User $user): string

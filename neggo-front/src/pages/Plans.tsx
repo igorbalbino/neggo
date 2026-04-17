@@ -27,12 +27,18 @@ export const Plans: React.FC = () => {
     fetchPlans();
   }, []);
 
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const handleBuyPlan = async (planId: string) => {
     setPurchaseLoading(planId);
     try {
-      await api.buyPlan(planId);
+      const result = await api.buyPlan(planId);
+      
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
       // Refresh plans to show current
       const data = await api.getPlans();
       setPlans(data);
@@ -43,6 +49,42 @@ export const Plans: React.FC = () => {
       setPurchaseLoading(null);
     }
   };
+
+  const planTiers = [
+    { 
+      id: 'free', 
+      name: t('plan_name_free'), 
+      price: 0,
+      currency: language === 'pt-BR' ? 'R$' : 'US$',
+      adLimit: 1,
+      benefits: ['1 Anúncio simultâneo', 'Sem destaques', 'Suporte comunitário']
+    },
+    { 
+      id: 'essential', 
+      name: t('plan_name_essencial'), 
+      price: language === 'pt-BR' ? 29.90 : 5.99,
+      currency: language === 'pt-BR' ? 'R$' : 'US$',
+      adLimit: 5,
+      benefits: ['5 Anúncios simultâneos', 'Destaque básico', 'Suporte via chat']
+    },
+    { 
+      id: 'professional', 
+      name: t('plan_name_profissional'), 
+      price: language === 'pt-BR' ? 59.90 : 36.99,
+      currency: language === 'pt-BR' ? 'R$' : 'US$',
+      adLimit: 25,
+      popular: true,
+      benefits: ['25 Anúncios simultâneos', 'Destaque prioritário', 'Selo Profissional', 'Painel de estatísticas']
+    },
+    { 
+      id: 'enterprise', 
+      name: t('plan_name_empresarial'), 
+      price: language === 'pt-BR' ? 89.90 : 58.99,
+      currency: language === 'pt-BR' ? 'R$' : 'US$',
+      adLimit: 100,
+      benefits: ['Anúncios ilimitados', 'Destaque máximo', 'Gerente de conta', 'API de integração']
+    }
+  ];
 
   return (
     <div className="pb-24 min-h-screen bg-gray-50">
@@ -65,65 +107,68 @@ export const Plans: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {plans.map((plan, i) => (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                className={cn(
-                  "relative bg-white p-8 rounded-[40px] shadow-sm border-2 transition-all",
-                  plan.popular ? "border-blue-600 ring-4 ring-blue-50" : "border-transparent",
-                  plan.isCurrent && "opacity-80"
-                )}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    {t('most_popular')}
-                  </div>
-                )}
-
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900">{plan.name}</h3>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t('up_to')} {plan.adLimit} {t('my_ads')}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-gray-400">R$</span>
-                    <span className="text-3xl font-black text-gray-900">{plan.price.toString().split('.')[0]}</span>
-                    <span className="text-sm font-bold text-gray-400">,{plan.price.toFixed(2).split('.')[1] || '00'}</span>
-                    <p className="text-[10px] font-bold text-gray-400">/{t('per_month')}</p>
-                  </div>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                      <div className={cn(
-                        "w-5 h-5 rounded-full flex items-center justify-center",
-                        plan.popular ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
-                      )}>
-                        <Check size={12} strokeWidth={3} />
-                      </div>
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
-
-                <button 
-                  disabled={plan.isCurrent || purchaseLoading === plan.id}
-                  onClick={() => handleBuyPlan(plan.id)}
+            {planTiers.map((tier, i) => {
+              const plan = plans.find(p => p.id === tier.id) || { ...tier, isCurrent: false };
+              return (
+                <motion.div
+                  key={tier.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
                   className={cn(
-                    "w-full py-4 rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2",
-                    plan.isCurrent 
-                      ? "bg-gray-100 text-gray-400 cursor-default" 
-                      : (plan.popular ? "bg-blue-600 text-white shadow-lg shadow-blue-200" : "bg-gray-900 text-white")
+                    "relative bg-white p-8 rounded-[40px] shadow-sm border-2 transition-all",
+                    tier.popular ? "border-blue-600 ring-4 ring-blue-50" : "border-transparent",
+                    plan.isCurrent && "opacity-80"
                   )}
                 >
-                  {purchaseLoading === plan.id ? <Loader2 className="animate-spin" size={20} /> : (plan.isCurrent ? t('plan_current') : t('plan_subscribe'))}
-                </button>
-              </motion.div>
-            ))}
+                  {tier.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                      {t('most_popular')}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900">{tier.name}</h3>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t('up_to')} {tier.adLimit} {t('my_ads')}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-gray-400">{tier.currency}</span>
+                      <span className="text-3xl font-black text-gray-900">{tier.price.toString().split('.')[0]}</span>
+                      <span className="text-sm font-bold text-gray-400">,{tier.price.toFixed(2).split('.')[1] || '00'}</span>
+                      <p className="text-[10px] font-bold text-gray-400">/{t('per_month')}</p>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {tier.benefits.map((benefit) => (
+                      <li key={benefit} className="flex items-center gap-3 text-sm text-gray-600 font-medium">
+                        <div className={cn(
+                          "w-5 h-5 rounded-full flex items-center justify-center",
+                          tier.popular ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
+                        )}>
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button 
+                    disabled={plan.isCurrent || purchaseLoading === tier.id}
+                    onClick={() => handleBuyPlan(tier.id)}
+                    className={cn(
+                      "w-full py-4 rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2",
+                      plan.isCurrent 
+                        ? "bg-gray-100 text-gray-400 cursor-default" 
+                        : (tier.popular ? "bg-blue-600 text-white shadow-lg shadow-blue-200" : "bg-gray-900 text-white")
+                    )}
+                  >
+                    {purchaseLoading === tier.id ? <Loader2 className="animate-spin" size={20} /> : (plan.isCurrent ? t('plan_current') : t('plan_subscribe'))}
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 

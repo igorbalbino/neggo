@@ -4,6 +4,7 @@ import { MapPin, Zap } from 'lucide-react';
 import { Ad } from '../types';
 import { Badge } from './Badge';
 import { cn } from '../lib/utils';
+import { useTranslation } from '../i18n/LanguageContext';
 
 interface AdCardProps {
   ad: Ad;
@@ -11,9 +12,14 @@ interface AdCardProps {
 }
 
 export const AdCard: React.FC<AdCardProps> = ({ ad, className }) => {
+  const { language, t } = useTranslation();
+  
   const formattedPrice = typeof ad.price === 'number' 
-    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ad.price)
-    : 'A combinar';
+    ? new Intl.NumberFormat(language === 'pt-BR' ? 'pt-BR' : 'en-US', { 
+        style: 'currency', 
+        currency: language === 'pt-BR' ? 'BRL' : 'USD' 
+      }).format(ad.price)
+    : t('negotiable');
 
   return (
     <Link 

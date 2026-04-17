@@ -7,7 +7,7 @@ All responses from the backend should follow this structure:
 ```json
 {
   "success": boolean,
-  "error": string | false,
+  "error": string | null,
   "data": any
 }
 ```
@@ -24,7 +24,15 @@ All responses from the backend should follow this structure:
   {
     "id": "user_uuid",
     "token": "session_jwt_string",
-    "firebaseToken": "custom_firebase_token_for_chat"
+    "chatToken": "custom_firebase_token_for_chat",
+    "user": {
+      "id": "string",
+      "name": "string",
+      "photoUrl": "string",
+      "rating": "number",
+      "isPro": "boolean",
+      "plan": "string"
+    }
   }
   ```
 
@@ -58,6 +66,10 @@ All responses from the backend should follow this structure:
 - **Purpose**: Fetch all active conversations for the user.
 - **Data on Success**: `ChatListItem[]`
 
+### POST `/ads/:id/chat`
+- **Purpose**: Start or retrieve a chat for a specific ad.
+- **Data on Success**: `{ id: string }` (The chat room ID)
+
 ### GET `/chats/:id/messages`
 - **Purpose**: Fetch messages for a specific conversation.
 - **Data on Success**: `Message[]`
@@ -77,7 +89,7 @@ All responses from the backend should follow this structure:
 
 ### POST `/plans/:id/buy`
 - **Purpose**: Purchase a subscription plan.
-- **Data on Success**: `{ success: true }`
+- **Data on Success**: `{ success: true, checkoutUrl?: string }`
 
 ---
 
@@ -85,7 +97,7 @@ All responses from the backend should follow this structure:
 
 ### POST `/ads/:id/boost`
 - **Purpose**: Purchase a visibility boost for a specific ad.
-- **Data on Success**: `{ success: true }`
+- **Data on Success**: `{ success: true, checkoutUrl?: string }`
 
 ---
 
@@ -95,13 +107,27 @@ All responses from the backend should follow this structure:
 - **Purpose**: Fetch current user profile details.
 - **Data on Success**: `User` (User profile object)
 
+### PUT `/profile`
+- **Purpose**: Update current user profile or preferences.
+- **Payload**: `Partial<User>` (e.g., `{ preferences: { contactMode: 'chat' } }`)
+- **Data on Success**: `User` (Updated profile object)
+
 ---
 
-## 4. Plans & Billing
+## 7. User Specific Lists (Private)
+All endpoints below REQUIRE the `Authorization: Bearer <token>` header.
 
-### GET `/plans`
-- **Purpose**: Fetch available subscription plans.
-- **Data on Success**: `Plan[]` (List of Plan objects)
+### GET `/my-ads`
+- **Purpose**: Fetch ads created by the current authenticated user.
+- **Expected Data**: `Ad[]`
+
+### GET `/favorites`
+- **Purpose**: Fetch ads favorited by the current user.
+- **Expected Data**: `Ad[]`
+
+### POST `/ads/:id/favorite`
+- **Purpose**: Toggle favorite status for an ad.
+- **Data on Success**: `null`
 
 ---
 
@@ -136,7 +162,12 @@ All responses from the backend should follow this structure:
   "photoUrl": "string",
   "rating": "number",
   "isPro": "boolean",
-  "phone": "string"
+  "phone": "string",
+  "plan": "string",
+  "preferences": {
+    "contactMode": "'chat' | 'both'",
+    "showPhoto": "boolean"
+  }
 }
 ```
 

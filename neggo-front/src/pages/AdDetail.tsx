@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Share2, Heart, MapPin, MessageCircle, User, Star, ShieldCheck, Loader2, Zap } from 'lucide-react';
+import { ChevronLeft, Share2, Heart, MapPin, MessageCircle, User, Star, ShieldCheck, Loader2, Zap, Phone } from 'lucide-react';
 import { Badge } from '../components/Badge';
 import { motion } from 'motion/react';
 import { useTranslation } from '../i18n/LanguageContext';
@@ -10,7 +10,7 @@ import { Ad } from '../types';
 export const AdDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [ad, setAd] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,12 +31,19 @@ export const AdDetail: React.FC = () => {
   }, [id, navigate]);
 
   const [isBoosting, setIsBoosting] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   const handleBoost = async () => {
     if (!ad || isBoosting) return;
     setIsBoosting(true);
     try {
-      await api.boostAd(ad.id);
+      const result = await api.boostAd(ad.id);
+      
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
       // Refresh ad to show boosted status
       const data = await api.getAd(ad.id);
       setAd(data);
@@ -45,6 +52,19 @@ export const AdDetail: React.FC = () => {
       alert(err.message || t('boost_error'));
     } finally {
       setIsBoosting(false);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!ad || isStartingChat) return;
+    setIsStartingChat(true);
+    try {
+      const chat = await api.startChat(ad.id);
+      navigate(`/chat/room/${chat.id}`);
+    } catch (err: any) {
+      alert(err.message || 'Erro ao iniciar conversa');
+    } finally {
+      setIsStartingChat(false);
     }
   };
 
@@ -125,7 +145,13 @@ export const AdDetail: React.FC = () => {
 
           <h1 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 leading-tight">{ad.title}</h1>
           <p className="text-3xl md:text-4xl font-black text-blue-600 mb-6">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ad.price)}
+            {typeof ad.price === 'number' 
+              ? new Intl.NumberFormat(language === 'pt-BR' ? 'pt-BR' : 'en-US', { 
+                  style: 'currency', 
+                  currency: language === 'pt-BR' ? 'BRL' : 'USD' 
+                }).format(ad.price)
+              : t('negotiable')
+            }
           </p>
 
           <div className="flex items-center text-gray-500 text-sm mb-8 pb-6 border-b border-gray-100">
@@ -151,22 +177,25 @@ export const AdDetail: React.FC = () => {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img 
-                  src={ad.seller.photoUrl} 
-                  alt={ad.seller.name} 
+                  src={ad.seller?.preferences?.showPhoto !== false 
+                    ? (ad.seller?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(ad.seller?.name || '')}&background=random`)
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(ad.seller?.name || '')}&background=random`
+                  } 
+                  alt={ad.seller?.name} 
                   className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md"
                   referrerPolicy="no-referrer"
                 />
-                {ad.seller.isPro && (
+                {ad.seller?.isPro && (
                   <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full border-2 border-white">
                     <ShieldCheck size={14} />
                   </div>
                 )}
               </div>
               <div>
-                <h3 className="font-bold text-gray-900 text-lg">{ad.seller.name}</h3>
+                <h3 className="font-bold text-gray-900 text-lg">{ad.seller?.name}</h3>
                 <div className="flex items-center text-yellow-500 text-xs font-bold">
                   <Star size={14} fill="currentColor" className="mr-1" />
-                  {ad.seller.rating}
+                  {ad.seller?.rating}
                 </div>
               </div>
             </div>
@@ -176,13 +205,29 @@ export const AdDetail: React.FC = () => {
           </div>
 
           <div className="hidden md:block space-y-3">
-            <button 
-              onClick={() => navigate(`/chat/room/${ad.id}`)}
-              className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black flex items-center justify-center gap-3 shadow-xl shadow-blue-100 active:scale-95 transition-transform"
-            >
-              <MessageCircle size={24} />
-              {t('start_chat')}
-            </button>
+            <div className="flex gap-3">
+              <button 
+                onClick={handleStartChat}
+                disabled={isStartingChat}
+                className="flex-1 bg-blue-600 text-white py-5 rounded-3xl font-black flex items-center justify-center gap-3 shadow-xl shadow-blue-100 active:scale-95 transition-transform disabled:opacity-50"
+              >
+                {isStartingChat ? <Loader2 className="animate-spin" size={24} /> : (
+                  <>
+                    <MessageCircle size={24} />
+                    {t('start_chat')}
+                  </>
+                )}
+              </button>
+
+              {ad.seller?.preferences?.contactMode === 'both' && ad.seller?.phone && (
+                <a
+                  href={`tel:${ad.seller.phone}`}
+                  className="px-8 bg-green-500 text-white rounded-3xl font-black flex items-center justify-center shadow-xl shadow-green-100 active:scale-95 transition-transform"
+                >
+                  <Phone size={24} />
+                </a>
+              )}
+            </div>
             
             {!ad.isBoosted && (
               <button 
@@ -205,12 +250,26 @@ export const AdDetail: React.FC = () => {
       {/* Sticky Bottom Action (Mobile Only) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 z-50 flex gap-3">
         <button 
-          onClick={() => navigate(`/chat/room/${ad.id}`)}
-          className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-200 active:scale-95 transition-transform"
+          onClick={handleStartChat}
+          disabled={isStartingChat}
+          className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-200 active:scale-95 transition-transform disabled:opacity-50"
         >
-          <MessageCircle size={20} />
-          {t('start_chat')}
+          {isStartingChat ? <Loader2 className="animate-spin" size={20} /> : (
+            <>
+              <MessageCircle size={20} />
+              {t('start_chat')}
+            </>
+          )}
         </button>
+
+        {ad.seller?.preferences?.contactMode === 'both' && ad.seller?.phone && (
+          <a
+            href={`tel:${ad.seller.phone}`}
+            className="p-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100 active:scale-95 transition-transform"
+          >
+            <Phone size={20} />
+          </a>
+        )}
         
         {!ad.isBoosted && (
           <button 
