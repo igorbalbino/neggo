@@ -1,0 +1,7 @@
+{
+  "name": "Neggo - Marketplace P2P",
+  "description": "Plataforma de classificados P2P focada em serviços e produtos com negociação via chat.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

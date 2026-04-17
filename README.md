@@ -1,69 +1,91 @@
-# CodeIgniter 4 Application Starter
+# Neggo Backend API
 
-## What is CodeIgniter?
+Backend da plataforma **Neggo**, um marketplace P2P para compra/venda de produtos e serviços com negociação via chat no frontend.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Funcionalidades
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+- Cadastro e login com token de sessão (`Bearer`) + token custom para chat.
+- CRUD principal de anúncios (`ads`) com suporte a produtos e serviços.
+- Listagem de planos de assinatura e compra integrada com Stripe Checkout.
+- Compra de boost para anúncio com Stripe Checkout.
+- Perfil do usuário autenticado.
+- Endpoints de chat (lista de conversas e mensagens) compatíveis com o contrato do frontend.
+- Resposta padronizada em todos os endpoints:
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+```json
+{
+  "success": true,
+  "error": false,
+  "data": {}
+}
+```
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Stack
 
-## Installation & updates
-
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
-
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+- Laravel 12
+- Laravel Sanctum (auth token)
+- Stripe PHP SDK
+- SQLite (default local)
 
 ## Setup
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+1. Copie as variáveis de `.env` / `.env.example`.
+2. Gere a chave da aplicação:
+   - `php artisan key:generate`
+3. Rode migrações + seed:
+   - `php artisan migrate --seed`
+4. Inicie a API:
+   - `php artisan serve`
 
-## Important Change with index.php
+## Endpoints
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### Auth
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+- `POST /api/auth/register`
+  - payload: `{ name, email, password, phone? }`
+  - retorno: `data: null`
+- `POST /api/auth/login`
+  - payload: `{ email, password }`
+  - retorno `data`:
+    - `id`
+    - `token` (sessão JWT-like via Sanctum)
+    - `firebaseToken` (token custom para chat)
+    - `chatToken` (alias para compatibilidade)
+    - `user`
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### Ads
 
-## Repository Management
+- `GET /api/ads`
+- `GET /api/ads/{id}`
+- `POST /api/ads` (auth)
+  - suporta `price` numérico ou `'negotiable'`
+- `POST /api/ads/{id}/boost` (auth)
+  - cria sessão Stripe e marca boost no anúncio
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+### Chats
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+- `GET /api/chats` (auth)
+- `GET /api/chats/{id}/messages` (auth)
+- `POST /api/chats/{id}/messages` (auth)
+  - payload: `{ text }`
 
-## Server Requirements
+### Plans
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+- `GET /api/plans`
+- `POST /api/plans/{id}/buy` (auth)
+  - cria sessão Stripe e ativa plano no usuário
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+### Profile
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+- `GET /api/profile` (auth)
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+## Variáveis de ambiente usadas
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+- `APP_NAME`, `APP_ENV`, `APP_KEY`, `APP_DEBUG`, `APP_URL`
+- `DB_CONNECTION`, `DB_DATABASE`
+- `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION`
+- `FRONTEND_URL`
+- `STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CURRENCY`
+- `PLAN_DURATION_DAYS`
+- `AD_BOOST_PRICE_CENTS`, `AD_BOOST_DURATION_DAYS`
+- `CHAT_TOKEN_SALT`
