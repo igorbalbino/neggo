@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Zap } from 'lucide-react';
+import { MapPin, Zap, Heart } from 'lucide-react';
 import { Ad } from '../types';
 import { Badge } from './Badge';
 import { cn } from '../lib/utils';
 import { useTranslation } from '../i18n/LanguageContext';
+import { api } from '../services/api';
 
 interface AdCardProps {
   ad: Ad;
@@ -13,6 +14,7 @@ interface AdCardProps {
 
 export const AdCard: React.FC<AdCardProps> = ({ ad, className }) => {
   const { language, t } = useTranslation();
+  const [isFavorite, setIsFavorite] = useState(false); // Should ideally come from ad data
   
   const formattedPrice = typeof ad.price === 'number' 
     ? new Intl.NumberFormat(language === 'pt-BR' ? 'pt-BR' : 'en-US', { 
@@ -21,11 +23,22 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, className }) => {
       }).format(ad.price)
     : t('negotiable');
 
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await api.toggleFavorite(ad.id);
+      setIsFavorite(!isFavorite);
+    } catch (err) {
+      console.error('Failed to toggle favorite', err);
+    }
+  };
+
   return (
     <Link 
       to={`/ad/${ad.id}`} 
       className={cn(
-        "block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-[0.98] transition-transform",
+        "block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-[0.98] transition-transform group relative",
         ad.isBoosted && "border-yellow-200 ring-1 ring-yellow-100",
         className
       )}
@@ -34,7 +47,7 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, className }) => {
         <img 
           src={ad.images[0] || 'https://picsum.photos/seed/placeholder/400/400'} 
           alt={ad.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
         />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -47,6 +60,16 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, className }) => {
             </Badge>
           )}
         </div>
+
+        <button 
+          onClick={handleToggleFavorite}
+          className={cn(
+            "absolute top-2 right-2 p-2 rounded-full backdrop-blur-md transition-all active:scale-90",
+            isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-gray-400 hover:text-red-500"
+          )}
+        >
+          <Heart size={16} fill={isFavorite ? "currentColor" : "none"} />
+        </button>
       </div>
       
       <div className="p-3">

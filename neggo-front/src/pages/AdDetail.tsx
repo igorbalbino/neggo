@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Share2, Heart, MapPin, MessageCircle, User, Star, ShieldCheck, Loader2, Zap, Phone } from 'lucide-react';
+import { ChevronLeft, Share2, Heart, MapPin, MessageCircle, User, Star, ShieldCheck, Loader2, Zap, Phone, ArrowLeft } from 'lucide-react';
 import { Badge } from '../components/Badge';
 import { motion } from 'motion/react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../services/api';
 import { Ad } from '../types';
+import { ShareModal } from '../components/ShareModal';
+import { cn } from '../lib/utils';
+import { useChat } from '../contexts/ChatContext';
 
 export const AdDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
+  const { startChat } = useChat();
   const [ad, setAd] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -59,12 +66,35 @@ export const AdDetail: React.FC = () => {
     if (!ad || isStartingChat) return;
     setIsStartingChat(true);
     try {
-      const chat = await api.startChat(ad.id);
-      navigate(`/chat/room/${chat.id}`);
+      const chatId = await startChat(
+        ad.sellerId, 
+        ad.id, 
+        ad.seller?.name || 'Vendedor', 
+        ad.title,
+        ad.seller?.photoUrl
+      );
+      if (chatId) {
+        navigate(`/chat/room/${chatId}`);
+      } else {
+        throw new Error('Failed to start chat');
+      }
     } catch (err: any) {
       alert(err.message || 'Erro ao iniciar conversa');
     } finally {
       setIsStartingChat(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!ad || isFavoriteLoading) return;
+    setIsFavoriteLoading(true);
+    try {
+      await api.toggleFavorite(ad.id);
+      setIsFavorite(!isFavorite);
+    } catch (err) {
+      console.error('Failed to toggle favorite', err);
+    } finally {
+      setIsFavoriteLoading(false);
     }
   };
 
@@ -89,13 +119,36 @@ export const AdDetail: React.FC = () => {
           <ChevronLeft size={24} />
         </button>
         <div className="flex gap-2 pointer-events-auto">
-          <button className="p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform">
+          <button 
+            onClick={() => setIsShareModalOpen(true)}
+            className="p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm pointer-events-auto active:scale-90 transition-transform"
+          >
             <Share2 size={20} />
           </button>
-          <button className="p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm active:scale-90 transition-transform">
-            <Heart size={20} />
+          <button 
+            onClick={handleToggleFavorite}
+            disabled={isFavoriteLoading}
+            className={cn(
+              "p-2 backdrop-blur-md rounded-full shadow-sm pointer-events-auto active:scale-90 transition-all",
+              isFavorite ? "bg-red-500 text-white" : "bg-white/80 text-gray-900"
+            )}
+          >
+            <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
           </button>
         </div>
+      </div>
+
+      {/* Desktop Back Button */}
+      <div className="hidden md:block max-w-7xl mx-auto px-8 lg:px-12 pt-8 -mb-4">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-400 hover:text-gray-900 font-bold transition-colors group"
+        >
+          <div className="p-2 bg-white border border-gray-100 rounded-xl shadow-sm group-hover:bg-gray-50 transition-colors">
+            <ArrowLeft size={18} />
+          </div>
+          {t('back')}
+        </button>
       </div>
 
       <div className="md:flex md:gap-8 md:p-8 lg:p-12">
@@ -138,8 +191,22 @@ export const AdDetail: React.FC = () => {
               )}
             </div>
             <div className="hidden md:flex gap-2">
-              <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors"><Share2 size={20} /></button>
-              <button className="p-2 text-gray-400 hover:text-red-500 transition-colors"><Heart size={20} /></button>
+              <button 
+                onClick={() => setIsShareModalOpen(true)}
+                className="p-3 bg-gray-50 text-gray-400 hover:text-blue-600 rounded-2xl transition-colors"
+              >
+                <Share2 size={20} />
+              </button>
+              <button 
+                onClick={handleToggleFavorite}
+                disabled={isFavoriteLoading}
+                className={cn(
+                  "p-3 rounded-2xl transition-all",
+                  isFavorite ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:text-red-500"
+                )}
+              >
+                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+              </button>
             </div>
           </div>
 
@@ -281,6 +348,11 @@ export const AdDetail: React.FC = () => {
           </button>
         )}
       </div>
+      <ShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        title={ad.title} 
+      />
     </div>
   );
 };

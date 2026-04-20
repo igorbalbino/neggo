@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Package, Loader2 } from 'lucide-react';
+import { ChevronLeft, Package, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../services/api';
 import { Ad } from '../types';
 import { AdCard } from '../components/AdCard';
 import { motion } from 'motion/react';
+import { cn } from '../lib/utils';
 
 export const MyAds: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMyAds = async () => {
@@ -26,6 +28,21 @@ export const MyAds: React.FC = () => {
     };
     fetchMyAds();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este anúncio?')) return;
+    
+    setIsDeleting(id);
+    try {
+      await api.deleteAd(id);
+      setAds(prev => prev.filter(ad => ad.id !== id));
+    } catch (err) {
+      console.error('Failed to delete ad', err);
+      alert('Erro ao excluir anúncio');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   return (
     <div className="pb-24 min-h-screen bg-gray-50">
@@ -51,8 +68,23 @@ export const MyAds: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.05 }}
+                    className="relative group"
                   >
                     <AdCard ad={ad} />
+                    <button 
+                      onClick={() => handleDelete(ad.id)}
+                      disabled={isDeleting === ad.id}
+                      className={cn(
+                        "absolute top-2 right-2 bg-red-600 text-white p-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 z-10 active:scale-95",
+                        "md:opacity-0 md:group-hover:opacity-100" // Visible on hover for desktop, always for mobile
+                      )}
+                    >
+                      {isDeleting === ad.id ? (
+                        <Loader2 className="animate-spin" size={18} />
+                      ) : (
+                        <Trash2 size={18} />
+                      )}
+                    </button>
                   </motion.div>
                 ))}
               </div>

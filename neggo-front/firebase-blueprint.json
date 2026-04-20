@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Chat": {
+      "title": "Chat",
+      "description": "Conversation between two users regarding an ad",
+      "type": "object",
+      "properties": {
+        "ad_id": { "type": "string" },
+        "adTitle": { "type": "string" },
+        "users": { "type": "array", "items": { "type": "string" } },
+        "contractor_id": { "type": "string" },
+        "contractor_name": { "type": "string" },
+        "artist_name": { "type": "string" },
+        "last_message": { "type": "string" },
+        "last_message_at": { "type": "number" },
+        "contractor_unread_count": { "type": "number" },
+        "artist_unread_count": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ad_id", "users", "contractor_id", "updatedAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual chat message",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "senderId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "senderId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Collection of active conversations"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages within a conversation"
+    }
+  }
+}

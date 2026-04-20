@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use App\Models\User;
 use App\Models\UserPlan;
+use Kreait\Firebase\Factory;
 
 class AuthController extends Controller
 {
@@ -42,7 +43,15 @@ class AuthController extends Controller
         /** @var User $user */
         $user = $request->user();
         $token = $user->createToken('neggo-session')->plainTextToken;
-        $customChatToken = $this->buildChatToken($user);
+		
+		$secret_file = base_path()."\\neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json";
+    
+		$firebase = (new Factory)
+			->withServiceAccount($secret_file)
+			->createAuth();
+
+		$customChatToken = $firebase->createCustomToken((string) $user->id);
+		$customChatToken = $customChatToken->toString();
 
         return $this->ok([
             'id' => (string) $user->id,
@@ -76,20 +85,5 @@ class AuthController extends Controller
             ?->name;
 
         return $planName ?: 'Free';
-    }
-
-    private function buildChatToken(User $user): string
-    {
-        $payload = [
-            'sub' => (string) $user->id,
-            'email' => $user->email,
-            'exp' => now()->addHours(24)->timestamp,
-            'iat' => now()->timestamp,
-        ];
-
-        $secret = config('app.key').env('CHAT_TOKEN_SALT', 'neggo-chat');
-        $signature = hash_hmac('sha256', json_encode($payload), $secret);
-
-        return base64_encode(json_encode($payload).'.'.$signature);
     }
 }

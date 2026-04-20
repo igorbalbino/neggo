@@ -1,18 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ChevronRight, Globe, Zap, Shield, MessageSquare, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronRight, Globe, Zap, Shield, MessageSquare, ArrowRight, ChevronDown } from 'lucide-react';
 import { useTranslation, Language } from '../i18n/LanguageContext';
 import { api } from '../services/api';
+import { cn } from '../lib/utils';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { t, setLanguage, language } = useTranslation();
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (api.isAuthenticated()) {
       navigate('/app');
     }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [navigate]);
 
   const languages: { code: Language; label: string }[] = [
@@ -28,22 +39,44 @@ export const LandingPage: React.FC = () => {
       <nav className="px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
         <img src="/neggo.png" alt="Neggo" className="h-10 w-auto object-contain" referrerPolicy="no-referrer" />
         <div className="flex items-center gap-4">
-          <div className="relative group">
-            <button className="flex items-center gap-1 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
+          <div className="relative" ref={langRef}>
+            <button 
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className={cn(
+                "flex items-center gap-1 text-sm font-bold transition-all px-3 py-2 rounded-xl",
+                isLangOpen ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-900"
+              )}
+            >
               <Globe size={18} />
               {languages.find(l => l.code === language)?.label}
+              <ChevronDown size={14} className={cn("transition-transform", isLangOpen && "rotate-180")} />
             </button>
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all z-50 overflow-hidden">
-              {languages.filter(l => l.code !== 'py').map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => setLanguage(lang.code)}
-                  className="w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 transition-colors"
+            <AnimatePresence>
+              {isLangOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden"
                 >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
+                  {languages.filter(l => l.code !== 'py').map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setLanguage(lang.code);
+                        setIsLangOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-4 py-3 text-sm font-bold transition-colors hover:bg-gray-50",
+                        language === lang.code ? "text-blue-600 bg-blue-50/50" : "text-gray-700"
+                      )}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <button 
             onClick={() => navigate('/login')}

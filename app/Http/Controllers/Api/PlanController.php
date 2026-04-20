@@ -51,14 +51,15 @@ class PlanController extends Controller
     {
         Stripe::setApiKey((string) env('STRIPE_SECRET_KEY'));
 
+        $priceId = $this->resolveStripePriceIdForPlan($plan);
+        if (!$priceId) {
+            return $this->fail('Stripe price ID não configurado para este plano.', 500);
+        }
+
         $session = Session::create([
-            'mode' => 'payment',
+            'mode' => 'subscription',
             'line_items' => [[
-                'price_data' => [
-                    'currency' => env('STRIPE_CURRENCY', 'usd'),
-                    'product_data' => ['name' => 'Neggo '.$plan->name],
-                    'unit_amount' => (int) round($plan->price * 100),
-                ],
+                'price' => $priceId,
                 'quantity' => 1,
             ]],
             'success_url' => env('FRONTEND_URL', 'http://localhost:5173').'/plans?success=1',
@@ -69,13 +70,26 @@ class PlanController extends Controller
             'user_id' => $request->user()->id,
             'plan_id' => $plan->id,
             'stripe_session_id' => $session->id,
+            // Nota: ideal seria ativar via webhook; por ora deixamos ativo para destravar o app.
             'status' => 'active',
             'starts_at' => now(),
-            'expires_at' => now()->addDays((int) env('PLAN_DURATION_DAYS', 30)),
+            'expires_at' => null,
         ]);
 
         $request->user()->update(['is_pro' => true]);
 
         return $this->ok(['success' => true, 'checkoutUrl' => $session->url]);
+    }
+
+    private function resolveStripePriceIdForPlan(Plan $plan): ?string
+    {
+        // Configure estes IDs no .env (Stripe Dashboard -> Products -> Pricing).
+        // Ex.: STRIPE_PRICE_ID_ESSENCIAL=price_...
+        $normalized = mb_strtoupper(preg_replace('/[^a-z0-9]+/i', '_', trim((string) $plan->name)));
+        $key = "STRIPE_PRICE_ID_{$normalized}";
+
+        $value = env($key);
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 }

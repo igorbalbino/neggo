@@ -43,6 +43,8 @@ export const CreateAd: React.FC = () => {
   });
 
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const adImagesInputRef = useRef<HTMLInputElement>(null);
 
   const handlePriceChange = (val: string) => {
@@ -77,11 +79,24 @@ export const CreateAd: React.FC = () => {
     setIsPublishing(true);
     setPublishError('');
     try {
+      // Upload pending images first
+      let uploadedUrls: string[] = [];
+      if (pendingImages.length > 0) {
+        uploadedUrls = await Promise.all(
+          pendingImages.map(file => api.uploadImage(file).then(res => res.url))
+        );
+      }
+
       const finalPrice = formData.price === '' || isNaN(Number(formData.price)) ? 'negotiable' : Number(formData.price);
       await api.createAd({
         ...formData,
-        price: finalPrice
+        price: finalPrice,
+        images: uploadedUrls
       });
+      
+      // Clean up object URLs
+      previews.forEach(url => URL.revokeObjectURL(url));
+      
       setStep(4);
     } catch (err: any) {
       setPublishError(err.message || 'Erro ao publicar anúncio. Tente novamente.');
@@ -333,25 +348,36 @@ export const CreateAd: React.FC = () => {
                   ref={adImagesInputRef} 
                   accept="image/*"
                   multiple
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const files = Array.from(e.target.files || []) as File[];
                     if (files.length === 0) return;
-                    setIsUploadingImages(true);
-                    try {
-                      const urls = await Promise.all(files.map((file: File) => api.uploadImage(file).then(res => res.url)));
-                      setFormData({ ...formData, images: [...formData.images, ...urls] });
-                    } catch (err) {
-                      console.error(err);
-                    } finally {
-                      setIsUploadingImages(false);
-                    }
+                    
+                    const newPreviews = files.map(file => URL.createObjectURL(file));
+                    setPendingImages(prev => [...prev, ...files]);
+                    setPreviews(prev => [...prev, ...newPreviews]);
+                    setFormData({ ...formData, images: [...formData.images, ...newPreviews] }); // Temporarily using previews for display
                   }}
                 />
                 {formData.images.map((url, i) => (
                   <div key={i} className="relative aspect-square">
                     <img src={url} className="w-full h-full object-cover rounded-2xl" alt="Ad Preview" referrerPolicy="no-referrer" />
                     <button 
-                      onClick={() => setFormData({ ...formData, images: formData.images.filter((_, idx) => idx !== i) })}
+                      onClick={() => {
+                        const newImages = [...formData.images];
+                        newImages.splice(i, 1);
+                        setFormData({ ...formData, images: newImages });
+                        
+                        if (i < previews.length) {
+                          URL.revokeObjectURL(previews[i]);
+                          const newPreviews = [...previews];
+                          newPreviews.splice(i, 1);
+                          setPreviews(newPreviews);
+                          
+                          const newPending = [...pendingImages];
+                          newPending.splice(i, 1);
+                          setPendingImages(newPending);
+                        }
+                      }}
                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
                     >
                       <X size={12} />

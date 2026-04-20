@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { api } from '../services/api';
 import { db, auth } from '../services/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { useChat } from '../contexts/ChatContext';
 
 export const ChatRoom: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { chats, markAsRead } = useChat();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [chatInfo, setChatInfo] = useState<any>(null);
@@ -19,18 +21,45 @@ export const ChatRoom: React.FC = () => {
   useEffect(() => {
     if (!id) return;
 
-    // Fetch chat info from API
-    const fetchChatInfo = async () => {
-      try {
-        // Assuming your API can return chat details
-        const chats = await api.getChats();
-        const currentChat = chats.find(c => c.id === id);
-        if (currentChat) setChatInfo(currentChat);
-      } catch (err) {
-        console.error('Failed to fetch chat info', err);
-      }
-    };
-    fetchChatInfo();
+    // Mark as read
+    markAsRead(id);
+
+    // Get chat info from local context chats
+    const currentChat = chats.find(c => c.id === id);
+    if (currentChat) {
+      const isContractor = currentChat.contractor_id === auth.currentUser?.uid;
+      const otherUserName = isContractor ? currentChat.artist_name : currentChat.contractor_name;
+      // @ts-ignore
+      const otherUserPhoto = isContractor ? currentChat.artist_photo : currentChat.contractor_photo;
+      
+      setChatInfo({
+        userName: otherUserName,
+        userPhoto: otherUserPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUserName)}&background=random`,
+        adTitle: currentChat.adTitle || 'Anúncio'
+      });
+    } else {
+      // Fallback: fetch from Firestore directly if not in context yet
+      const fetchChatDoc = async () => {
+        try {
+          const docRef = doc(db, 'chats', id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const isContractor = data.contractor_id === auth.currentUser?.uid;
+            const otherUserName = isContractor ? data.artist_name : data.contractor_name;
+            const otherUserPhoto = isContractor ? data.artist_photo : data.contractor_photo;
+            setChatInfo({
+              userName: otherUserName,
+              userPhoto: otherUserPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUserName)}&background=random`,
+              adTitle: data.adTitle || 'Anúncio'
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching chat doc:', err);
+        }
+      };
+      fetchChatDoc();
+    }
 
     // Listen to messages in Firestore
     const q = query(
@@ -42,7 +71,8 @@ export const ChatRoom: React.FC = () => {
       const msgs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        time: doc.data().timestamp?.toDate()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '...'
+        // @ts-ignore
+        time: doc.data().timestamp?.toDate ? doc.data().timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'
       }));
       
       setMessages(msgs);
@@ -53,7 +83,7 @@ export const ChatRoom: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [id]);
+  }, [id, chats]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,12 +95,28 @@ export const ChatRoom: React.FC = () => {
     setMessage('');
     
     try {
+      // 1. Add message
       await addDoc(collection(db, 'chats', id, 'messages'), {
         text,
         senderId: auth.currentUser.uid,
-        sender: 'me', // Note: in real use you'd compare senderId with currentUser.uid in the UI
         timestamp: serverTimestamp(),
       });
+
+      // 2. Update chat room preview info
+      const chatRef = doc(db, 'chats', id);
+      const chatDoc = await getDoc(chatRef);
+      if (chatDoc.exists()) {
+        const data = chatDoc.data();
+        const isContractor = data.contractor_id === auth.currentUser.uid;
+        
+        await updateDoc(chatRef, {
+          last_message: text,
+          last_message_at: Date.now(),
+          updatedAt: serverTimestamp(),
+          // Increment unread count for the other person
+          [isContractor ? 'artist_unread_count' : 'contractor_unread_count']: increment(1)
+        });
+      }
     } catch (err) {
       console.error('Failed to send message to Firestore', err);
     }

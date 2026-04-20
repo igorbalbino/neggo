@@ -23,6 +23,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from './components/SEO';
 import { cn } from './lib/utils';
 import { AuthProvider } from './contexts/AuthContext';
+import { ChatProvider } from './contexts/ChatContext';
 
 import { useAuth } from './contexts/AuthContext';
 
@@ -90,10 +91,12 @@ export default function App() {
     <HelmetProvider>
       <LanguageProvider>
         <AuthProvider>
-          <Router>
-            <SEO />
-            <AppContent />
-          </Router>
+          <ChatProvider>
+            <Router>
+              <SEO />
+              <AppContent />
+            </Router>
+          </ChatProvider>
         </AuthProvider>
       </LanguageProvider>
     </HelmetProvider>

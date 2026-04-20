@@ -24,6 +24,7 @@ class ApiService {
   logout() {
     this.token = null;
     localStorage.removeItem('neggo_token');
+    localStorage.removeItem('neggo_chat_token');
   }
 
   isAuthenticated() {
@@ -62,6 +63,7 @@ class ApiService {
     
     // Auth with Firebase if chatToken is provided
     if (result.chatToken) {
+      localStorage.setItem('neggo_chat_token', result.chatToken);
       try {
         await authenticateWithFirebase(result.chatToken);
       } catch (err) {
@@ -95,6 +97,12 @@ class ApiService {
     });
   }
 
+  async deleteAd(adId: string): Promise<void> {
+    await this.request<void>(`/ads/${adId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Profile
   async getProfile(): Promise<User> {
     return this.request<User>('/profile');
@@ -125,28 +133,6 @@ class ApiService {
     return result.data;
   }
 
-  // Chats
-  async getChats(): Promise<any[]> {
-    return this.request<any[]>('/chats');
-  }
-
-  async getMessages(chatId: string): Promise<any[]> {
-    return this.request<any[]>(`/chats/${chatId}/messages`);
-  }
-
-  async sendMessage(chatId: string, text: string): Promise<any> {
-    return this.request<any>(`/chats/${chatId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ text }),
-    });
-  }
-
-  async startChat(adId: string): Promise<{ id: string }> {
-    return this.request<{ id: string }>(`/ads/${adId}/chat`, {
-      method: 'POST',
-    });
-  }
-
   // Plans
   async getPlans(): Promise<Plan[]> {
     return this.request<Plan[]>('/plans');
@@ -175,6 +161,17 @@ class ApiService {
 
   async toggleFavorite(adId: string): Promise<void> {
     await this.request<void>(`/ads/${adId}/favorite`, {
+      method: 'POST',
+    });
+  }
+
+  // Notifications
+  async getNotifications(): Promise<any[]> {
+    return this.request<any[]>('/notifications');
+  }
+
+  async markNotificationsRead(): Promise<void> {
+    await this.request<void>('/notifications/read', {
       method: 'POST',
     });
   }

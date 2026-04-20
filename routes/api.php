@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\UploadController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -17,12 +19,20 @@ Route::get('/plans', [PlanController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/ads', [AdController::class, 'store']);
     Route::post('/ads/{ad}/boost', [AdController::class, 'boost']);
+    Route::delete('/ads/{ad}', [AdController::class, 'destroy']);
+    Route::get('/my-ads', [AdController::class, 'myAds']);
 
     Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+
+    Route::post('/upload', [UploadController::class, 'store']);
 
     Route::get('/chats', [ChatController::class, 'index']);
     Route::get('/chats/{chat}/messages', [ChatController::class, 'messages']);
     Route::post('/chats/{chat}/messages', [ChatController::class, 'sendMessage']);
 
     Route::post('/plans/{plan}/buy', [PlanController::class, 'buy']);
+
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/ads/{ad}/favorite', [FavoriteController::class, 'toggle']);
 });

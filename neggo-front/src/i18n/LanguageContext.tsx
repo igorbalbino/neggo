@@ -579,6 +579,12 @@ export const translations: Translations = {
     'en': 'Back to start',
     'py': 'Jevy ñepyrũme',
   },
+  back: {
+    'pt-BR': 'Voltar',
+    'es': 'Volver',
+    'en': 'Back',
+    'py': 'Jevy',
+  },
   continue: {
     'pt-BR': 'Continuar',
     'es': 'Continuar',

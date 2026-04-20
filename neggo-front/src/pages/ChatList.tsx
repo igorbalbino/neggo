@@ -2,26 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, MessageSquare, ChevronRight, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { api } from '../services/api';
 import { cn } from '../lib/utils';
+import { useChat } from '../contexts/ChatContext';
+import { useAuth } from '../contexts/AuthContext';
+import { auth } from '../services/firebase';
 
 export const ChatList: React.FC = () => {
-  const [chats, setChats] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const data = await api.getChats();
-        setChats(data);
-      } catch (err) {
-        console.error('Failed to fetch chats', err);
-      } finally {
-        setIsLoading(false);
-      }
+  const { chats, isLoading } = useChat();
+  const { user } = useAuth();
+  
+  // Format chats for display
+  const displayChats = chats.map(chat => {
+    const isContractor = chat.contractor_id === auth.currentUser?.uid;
+    const otherUserName = isContractor ? chat.artist_name : chat.contractor_name;
+    // @ts-ignore
+    const otherUserPhoto = isContractor ? chat.artist_photo : chat.contractor_photo;
+    const unreadCount = isContractor ? chat.contractor_unread_count : chat.artist_unread_count;
+    
+    return {
+      id: chat.id,
+      userName: otherUserName,
+      userPhoto: otherUserPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUserName)}&background=random`,
+      adTitle: chat.adTitle || 'Anúncio',
+      lastMessage: chat.last_message,
+      // @ts-ignore
+      adImageUrl: chat.adImageUrl || 'https://picsum.photos/seed/neggo/200',
+      unread: unreadCount,
+      // @ts-ignore
+      time: chat.updatedAt?.toDate ? chat.updatedAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'
     };
-    fetchChats();
-  }, []);
+  });
 
   return (
     <div className="pb-24 min-h-screen bg-white">
@@ -46,7 +56,7 @@ export const ChatList: React.FC = () => {
             </div>
           ) : (
             <>
-              {chats.map((chat, i) => (
+              {displayChats.map((chat, i) => (
                 <motion.div
                   key={chat.id}
                   initial={{ opacity: 0, x: -20 }}

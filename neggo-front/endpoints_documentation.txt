@@ -58,6 +58,10 @@ All responses from the backend should follow this structure:
 - **Payload**: `Partial<Ad>`
 - **Data on Success**: `Ad` (The created Ad object)
 
+### DELETE `/ads/:id`
+- **Purpose**: Delete an existing ad.
+- **Data on Success**: `null`
+
 ---
 
 ## 3. Chat System (Now integrated into Backend)
@@ -127,6 +131,18 @@ All endpoints below REQUIRE the `Authorization: Bearer <token>` header.
 
 ### POST `/ads/:id/favorite`
 - **Purpose**: Toggle favorite status for an ad.
+- **Data on Success**: `null`
+
+---
+
+## 8. Notifications
+
+### GET `/notifications`
+- **Purpose**: Fetch all notifications for the user.
+- **Expected Data**: `NotificationItem[]`
+
+### POST `/notifications/read`
+- **Purpose**: Mark all notifications as read.
 - **Data on Success**: `null`
 
 ---

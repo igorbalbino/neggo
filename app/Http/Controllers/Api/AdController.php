@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponds;
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\AdBoost;
+use App\Models\UserPlan;
 use Illuminate\Http\Request;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -27,6 +28,18 @@ class AdController extends Controller
         return $this->ok($ads);
     }
 
+    public function myAds(Request $request)
+    {
+        $ads = Ad::query()
+            ->with('seller')
+            ->where('seller_id', $request->user()->id)
+            ->latest()
+            ->get()
+            ->map(fn (Ad $ad) => $this->transformAd($ad));
+
+        return $this->ok($ads);
+    }
+
     public function show(Ad $ad)
     {
         $ad->load('seller');
@@ -36,6 +49,18 @@ class AdController extends Controller
 
     public function store(Request $request)
     {
+        $limit = $this->resolveAdLimitForUser((int) $request->user()->id);
+        if ($limit !== null) {
+            $activeCount = Ad::query()
+                ->where('seller_id', $request->user()->id)
+                ->where('status', 'active')
+                ->count();
+
+            if ($activeCount >= $limit) {
+                return $this->fail("Você atingiu o limite de anúncios do seu plano ({$limit}). Faça upgrade para publicar mais.", 403);
+            }
+        }
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
@@ -67,6 +92,46 @@ class AdController extends Controller
         $ad->load('seller');
 
         return $this->ok($this->transformAd($ad));
+    }
+
+    private function resolveAdLimitForUser(int $userId): ?int
+    {
+        $planName = UserPlan::query()
+            ->with('plan:id,name')
+            ->where('user_id', $userId)
+            ->where('status', 'active')
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+            })
+            ->latest('id')
+            ->first()
+            ?->plan
+            ?->name;
+
+        $planName = $planName ?: 'Free';
+
+        $key = mb_strtolower(trim($planName));
+
+        // Limits requested:
+        // free: 2, essencial: 5, profissional: 25, empresarial: unlimited
+        return match ($key) {
+            'free' => 2,
+            'essencial' => 5,
+            'profissional' => 25,
+            'empresarial' => null,
+            default => 2,
+        };
+    }
+
+    public function destroy(Request $request, Ad $ad)
+    {
+        if ((int) $ad->seller_id !== (int) $request->user()->id) {
+            return $this->fail('Only the ad owner can delete this ad.', 403);
+        }
+
+        $ad->delete();
+
+        return $this->ok(null);
     }
 
     public function boost(Request $request, Ad $ad)
