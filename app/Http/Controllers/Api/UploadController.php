@@ -22,11 +22,17 @@ class UploadController extends Controller
             return $this->fail($e->getMessage(), 422);
         }
 
-        $path = $data['file']->store('uploads', 'public');
+        // $path = $data['file']->store('uploads', 'public');
 
         // Build a URL that works even when APP_URL is missing the port.
-        $url = rtrim($request->getSchemeAndHttpHost(), '/').'/storage/'.ltrim($path, '/');
+        // $url = rtrim($request->getSchemeAndHttpHost(), '/').'/storage/'.ltrim($path, '/');
 
+		$filename = uniqid().'.'.$data['file']->getClientOriginalExtension();
+
+		$data['file']->move(public_path('img'), $filename);
+
+		$url = rtrim($request->getSchemeAndHttpHost(), '/').'/img/'.$filename;
+		
         return $this->ok([
             'url' => $url,
         ]);

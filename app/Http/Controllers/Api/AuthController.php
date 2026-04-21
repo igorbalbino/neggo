@@ -44,7 +44,8 @@ class AuthController extends Controller
         $user = $request->user();
         $token = $user->createToken('neggo-session')->plainTextToken;
 		
-		$secret_file = base_path()."\\neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json";
+		// $secret_file = base_path()."\\neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json";
+		$secret_file = storage_path('app/private/neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json');
     
 		$firebase = (new Factory)
 			->withServiceAccount($secret_file)
