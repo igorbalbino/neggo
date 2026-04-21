@@ -1,7 +1,7 @@
 import { Ad, User, Location, Plan } from '../types';
 import { authenticateWithFirebase } from './firebase';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://api-neggo.creatioinc.com/api';
 
 interface ApiResponse<T> {
   success: boolean;

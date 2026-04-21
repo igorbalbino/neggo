@@ -724,6 +724,18 @@ export const translations: Translations = {
     'en': 'Buy, sell, and advertise services locally. The fastest and most intuitive platform for doing business in your region.',
     'py': 'Ejogua, evende ha emyasãi tembiapo ne rendápe. Pe plataforma pya\'eve ha iporãvéva rejapo hag̃ua negocios ne rendápe.',
   },
+  meta_keywords: {
+    'pt-BR': 'marketplace, compra e venda, usados, desapego, classificados, serviços locais, anúncio grátis, ganhar dinheiro, economia local, neggo',
+    'es': 'marketplace, compra y venta, usados, segunda mano, clasificados, servicios locales, anuncio gratis, ganar dinheiro, economía local, neggo',
+    'en': 'marketplace, buy and sell, used items, second hand, classifieds, local services, free ads, earn money, local economy, neggo',
+    'py': 'marketplace, jogua ha vende, mba\'e ojeipurúva, anuncios, tembiapo, pirapire, economía, neggo',
+  },
+  meta_landing_description: {
+    'pt-BR': 'Encontre tudo o que precisa na sua vizinhança. O marketplace Neggo conecta compradores e vendedores locais de forma simples e segura.',
+    'es': 'Encuentra todo lo que necesitas en tu vecindario. El marketplace Neggo conecta a compradores y vendedores locales de forma sencilla y segura.',
+    'en': 'Find everything you need in your neighborhood. The Neggo marketplace connects local buyers and sellers simply and securely.',
+    'py': 'Eheka opaite mba\'e ne rendápe. Neggo marketplace oñembojoaju joguahára ha vendehárape pya\'e ha hesakã porã.',
+  },
 };
 
 interface LanguageContextType {

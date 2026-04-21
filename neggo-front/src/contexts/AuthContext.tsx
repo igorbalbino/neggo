@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     const result = await api.login(email, password);
     setUser(result.user);
-	localStorage.setItem('neggo_chat_token', result.chatToken);
+    localStorage.setItem('neggo_chat_token', result.chatToken);
     localStorage.setItem('neggo_user', JSON.stringify(result.user));
   };
 
@@ -60,7 +60,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     api.logout();
     setUser(null);
     localStorage.removeItem('neggo_user');
-	localStorage.removeItem('neggo_chat_token');
   };
 
   const updateUser = (newUser: User) => {

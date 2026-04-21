@@ -8,6 +8,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { SEO } from '../components/SEO';
 
 export const Home: React.FC = () => {
   const { t } = useTranslation();
@@ -50,6 +51,9 @@ export const Home: React.FC = () => {
 
   return (
     <div className="pb-24">
+      <SEO 
+        title={t('products')}
+      />
       <Header />
       
       <main className="px-4 py-4 md:px-8">

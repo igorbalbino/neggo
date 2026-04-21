@@ -9,6 +9,7 @@ import { Ad } from '../types';
 import { ShareModal } from '../components/ShareModal';
 import { cn } from '../lib/utils';
 import { useChat } from '../contexts/ChatContext';
+import { SEO } from '../components/SEO';
 
 export const AdDetail: React.FC = () => {
   const { id } = useParams();
@@ -110,6 +111,13 @@ export const AdDetail: React.FC = () => {
 
   return (
     <div className="pb-24 bg-white min-h-screen">
+      <SEO 
+        title={ad.title}
+        description={ad.description}
+        image={ad.images[0]}
+        type="product"
+        keywords={`${ad.title}, ${ad.category}, marketplace, usados, ${ad.locations?.[0]?.city || ''}, neggo`}
+      />
       {/* Header Actions (Mobile Only) */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex justify-between p-4 pointer-events-none">
         <button 

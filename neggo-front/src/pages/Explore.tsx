@@ -7,6 +7,7 @@ import { api } from '../services/api';
 import { Ad } from '../types';
 import { AdCard } from '../components/AdCard';
 import { cn } from '../lib/utils';
+import { SEO } from '../components/SEO';
 
 export const Explore: React.FC = () => {
   const navigate = useNavigate();
@@ -31,6 +32,13 @@ export const Explore: React.FC = () => {
     { id: 'education', label: t('cat_education') },
     { id: 'tech', label: t('cat_tech') },
   ];
+
+  const currentCategoryLabel = categories.find(c => c.id === activeCategory)?.label;
+  const seoTitle = searchQuery 
+    ? `${searchQuery}` 
+    : currentCategoryLabel 
+      ? `${currentCategoryLabel}` 
+      : t('see_all');
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -66,6 +74,10 @@ export const Explore: React.FC = () => {
 
   return (
     <div className="pb-24 min-h-screen bg-gray-50 flex flex-col">
+      <SEO 
+        title={seoTitle}
+        keywords={`${seoTitle}, ${t('meta_keywords')}`}
+      />
       {/* Search Header */}
       <header className="bg-white px-4 py-4 md:px-8 border-b border-gray-100 sticky top-0 z-30">
         <div className="flex items-center gap-3">

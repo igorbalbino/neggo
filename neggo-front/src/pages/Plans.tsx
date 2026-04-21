@@ -6,6 +6,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { cn } from '../lib/utils';
 import { api } from '../services/api';
 import { Plan } from '../types';
+import { SEO } from '../components/SEO';
 
 export const Plans: React.FC = () => {
   const navigate = useNavigate();
@@ -88,6 +89,9 @@ export const Plans: React.FC = () => {
 
   return (
     <div className="pb-24 min-h-screen bg-gray-50">
+      <SEO 
+        title={t('plans_title')}
+      />
       <header className="px-4 py-4 flex items-center gap-3 bg-white border-b border-gray-50 sticky top-0 z-10">
         <button onClick={() => navigate(-1)} className="p-1">
           <ChevronLeft size={24} />

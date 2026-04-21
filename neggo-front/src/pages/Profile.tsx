@@ -7,6 +7,7 @@ import { useTranslation } from '../i18n/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 import { EditProfileModal } from '../components/EditProfileModal';
+import { SEO } from '../components/SEO';
 
 export const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -62,6 +63,11 @@ export const Profile: React.FC = () => {
 
   return (
     <div className="pb-24 min-h-screen bg-gray-50">
+      <SEO 
+        title={user.name}
+        image={user.photoUrl}
+        robots="noindex, follow"
+      />
       {/* Profile Header */}
       <div className="bg-white px-6 pt-12 pb-8 rounded-b-[40px] shadow-sm">
         <div className="flex flex-col items-center">

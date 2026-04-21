@@ -5,6 +5,7 @@ import { ChevronRight, Globe, Zap, Shield, MessageSquare, ArrowRight, ChevronDow
 import { useTranslation, Language } from '../i18n/LanguageContext';
 import { api } from '../services/api';
 import { cn } from '../lib/utils';
+import { SEO } from '../components/SEO';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +36,9 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
+      <SEO 
+        description={t('meta_landing_description')}
+      />
       {/* Navbar */}
       <nav className="px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
         <img src="/neggo.png" alt="Neggo" className="h-10 w-auto object-contain" referrerPolicy="no-referrer" />
