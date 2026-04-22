@@ -15,18 +15,18 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-2 pb-safe flex justify-between items-center z-50">
+    <nav className="md:hidden fixed bottom-1 left-2 right-2 bg-white/80 backdrop-blur-xl border border-white/20 px-4 py-2 pb-safe flex justify-between items-center z-50 rounded-[32px] shadow-2xl">
       {navItems.map((item) => (
         <NavLink
           key={item.path}
           to={item.path}
           className={({ isActive }) => cn(
-            "flex flex-col items-center gap-1 transition-colors",
-            item.primary ? "text-blue-600 -mt-8 bg-white p-2 rounded-full shadow-lg border border-gray-50" : (isActive ? "text-blue-600" : "text-gray-400")
+            "flex flex-col items-center gap-0.5 transition-all active:scale-90",
+            item.primary ? "text-white bg-blue-600 p-3 rounded-full shadow-lg shadow-blue-200" : (isActive ? "text-blue-600" : "text-gray-400")
           )}
         >
-          <item.icon size={item.primary ? 32 : 24} strokeWidth={item.primary ? 2.5 : 2} />
-          {!item.primary && <span className="text-[10px] font-medium">{item.label}</span>}
+          <item.icon size={item.primary ? 28 : 22} strokeWidth={item.primary ? 3 : 2} />
+          {!item.primary && <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>}
         </NavLink>
       ))}
     </nav>

@@ -121,20 +121,20 @@ export const Profile: React.FC = () => {
 
       {/* Stats */}
       <div className="px-6 -mt-6 mb-8">
-        <div className="bg-white rounded-3xl p-6 shadow-sm flex justify-between text-center border border-gray-50">
-          <div>
-            <p className="text-2xl font-black text-gray-900">{user.stats?.active || 0}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('active')}</p>
+        <div className="bg-white/80 backdrop-blur-md rounded-[32px] p-5 md:p-6 shadow-xl shadow-gray-100/50 flex justify-between text-center border border-white/20">
+          <div className="flex-1">
+            <p className="text-xl md:text-2xl font-black text-gray-900 leading-none mb-1">{user.stats?.active || 0}</p>
+            <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('active')}</p>
           </div>
-          <div className="w-px bg-gray-100"></div>
-          <div>
-            <p className="text-2xl font-black text-gray-900">{user.stats?.sold || 0}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('sold')}</p>
+          <div className="w-px bg-gray-100 self-stretch"></div>
+          <div className="flex-1">
+            <p className="text-xl md:text-2xl font-black text-gray-900 leading-none mb-1">{user.stats?.sold || 0}</p>
+            <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('sold')}</p>
           </div>
-          <div className="w-px bg-gray-100"></div>
-          <div>
-            <p className="text-2xl font-black text-gray-900">{user.stats?.reviews || 0}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('reviews')}</p>
+          <div className="w-px bg-gray-100 self-stretch"></div>
+          <div className="flex-1">
+            <p className="text-xl md:text-2xl font-black text-gray-900 leading-none mb-1">{user.stats?.reviews || 0}</p>
+            <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('reviews')}</p>
           </div>
         </div>
       </div>

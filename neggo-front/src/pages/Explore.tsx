@@ -79,17 +79,17 @@ export const Explore: React.FC = () => {
         keywords={`${seoTitle}, ${t('meta_keywords')}`}
       />
       {/* Search Header */}
-      <header className="bg-white px-4 py-4 md:px-8 border-b border-gray-100 sticky top-0 z-30">
-        <div className="flex items-center gap-3">
+      <header className="bg-white/80 backdrop-blur-md px-4 py-2 md:py-4 md:px-8 border-b border-gray-100 sticky top-0 z-30">
+        <div className="flex items-center gap-2 md:gap-3">
           <button onClick={() => navigate(-1)} className="p-1">
             <ChevronLeft size={24} />
           </button>
           <form onSubmit={handleSearch} className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input 
               type="text" 
               placeholder={t('search_placeholder')} 
-              className="w-full bg-gray-100 border-none rounded-2xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+              className="w-full bg-gray-100/80 border-none rounded-xl py-2 md:py-2.5 pl-9 md:pl-10 pr-4 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 transition-all font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -97,21 +97,21 @@ export const Explore: React.FC = () => {
           <button 
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "p-2.5 rounded-2xl border transition-all",
+              "p-2 rounded-xl border transition-all active:scale-95 flex-shrink-0",
               showFilters ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-100 text-gray-500"
             )}
           >
-            <SlidersHorizontal size={20} />
+            <SlidersHorizontal size={18} />
           </button>
         </div>
 
         {/* Categories Bar */}
-        <div className="flex gap-2 overflow-x-auto pt-4 pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="flex gap-1.5 overflow-x-auto pt-3 pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           <button 
             onClick={() => { setActiveCategory(null); setSearchParams(p => { p.delete('cat'); return p; }); }}
             className={cn(
-              "whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold border transition-all",
-              activeCategory === null ? "bg-gray-900 border-gray-900 text-white" : "bg-white border-gray-100 text-gray-500"
+              "whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-tighter border transition-all",
+              activeCategory === null ? "bg-gray-900 border-gray-900 text-white" : "bg-white border-gray-100 text-gray-400"
             )}
           >
             {t('see_all')}
@@ -121,8 +121,8 @@ export const Explore: React.FC = () => {
               key={cat.id}
               onClick={() => { setActiveCategory(cat.id); setSearchParams(p => { p.set('cat', cat.id); return p; }); }}
               className={cn(
-                "whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold border transition-all",
-                activeCategory === cat.id ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-100 text-gray-500"
+                "whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-tighter border transition-all",
+                activeCategory === cat.id ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-100 text-gray-400"
               )}
             >
               {cat.label}

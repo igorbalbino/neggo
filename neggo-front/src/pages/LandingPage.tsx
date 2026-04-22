@@ -92,12 +92,12 @@ export const LandingPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="px-6 pt-12 pb-20 max-w-7xl mx-auto md:flex md:items-center md:gap-12">
-        <div className="md:flex-1">
+      <section className="px-6 pt-8 md:pt-12 pb-20 max-w-7xl mx-auto md:flex md:items-center md:gap-12">
+        <div className="md:flex-1 text-center md:text-left">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-[1.1] tracking-tight"
+            className="text-4xl min-[400px]:text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-[1.1] tracking-tight"
           >
             {t('landing_title')}
           </motion.h2>
@@ -105,7 +105,7 @@ export const LandingPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-gray-500 mb-10 leading-relaxed max-w-xl"
+            className="text-base md:text-xl text-gray-500 mb-10 leading-relaxed max-w-xl mx-auto md:mx-0"
           >
             {t('landing_subtitle')}
           </motion.p>
@@ -113,11 +113,11 @@ export const LandingPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start"
           >
             <button 
               onClick={() => navigate('/login')}
-              className="bg-blue-600 text-white px-8 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-transform"
+              className="bg-blue-600 text-white px-8 py-4 md:py-5 rounded-2xl font-black md:text-lg shadow-2xl shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-transform"
             >
               {t('get_started')}
               <ArrowRight size={22} />

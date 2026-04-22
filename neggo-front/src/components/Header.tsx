@@ -24,28 +24,28 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 bg-white z-40 px-4 md:px-8 py-3 md:py-6 border-b border-gray-100 flex items-center gap-3 md:gap-6">
-        <div className="md:hidden">
-          <img src="/neggo.png" alt="Neggo" className="h-8 w-auto object-contain" referrerPolicy="no-referrer" />
+      <header className="sticky top-0 bg-white/80 backdrop-blur-md z-40 px-4 md:px-8 py-2 md:py-4 border-b border-gray-100 flex items-center gap-3 md:gap-6">
+        <div className="md:hidden flex-shrink-0">
+          <img src="/neggo.png" alt="Neggo" className="h-7 w-auto object-contain" referrerPolicy="no-referrer" />
         </div>
         <form onSubmit={handleSearch} className="flex-1 relative">
-          <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input 
             type="text" 
             placeholder={t('search_placeholder')} 
-            className="w-full bg-gray-100 border-none rounded-2xl py-2.5 md:py-3.5 pl-10 md:pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full bg-gray-100/80 border-none rounded-xl py-2 md:py-3 pl-9 md:pl-12 pr-4 text-xs md:text-sm focus:ring-2 focus:ring-blue-500 transition-all font-medium"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </form>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button 
             onClick={() => setIsNotificationsOpen(true)}
             className="p-2 text-gray-500 relative hover:bg-gray-50 rounded-full transition-colors active:scale-90"
           >
-            <Bell size={22} />
+            <Bell size={20} />
             {hasUnread && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
             )}
           </button>
           <div className="hidden md:flex items-center gap-3 ml-2 pl-4 border-l border-gray-100">

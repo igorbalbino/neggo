@@ -323,11 +323,11 @@ export const AdDetail: React.FC = () => {
       </div>
 
       {/* Sticky Bottom Action (Mobile Only) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 z-50 flex gap-3">
+      <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 flex gap-2">
         <button 
           onClick={handleStartChat}
           disabled={isStartingChat}
-          className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-200 active:scale-95 transition-transform disabled:opacity-50"
+          className="flex-1 bg-blue-600 text-white py-4 rounded-3xl font-black flex items-center justify-center gap-2 shadow-2xl shadow-blue-200 active:scale-95 transition-transform disabled:opacity-50"
         >
           {isStartingChat ? <Loader2 className="animate-spin" size={20} /> : (
             <>
@@ -340,7 +340,7 @@ export const AdDetail: React.FC = () => {
         {ad.seller?.preferences?.contactMode === 'both' && ad.seller?.phone && (
           <a
             href={`tel:${ad.seller.phone}`}
-            className="p-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100 active:scale-95 transition-transform"
+            className="p-4 bg-green-500 text-white rounded-3xl font-black shadow-2xl shadow-green-100 active:scale-95 transition-transform flex items-center justify-center"
           >
             <Phone size={20} />
           </a>
@@ -350,7 +350,7 @@ export const AdDetail: React.FC = () => {
           <button 
             onClick={handleBoost}
             disabled={isBoosting}
-            className="p-4 bg-yellow-400 text-yellow-900 rounded-2xl font-bold shadow-lg shadow-yellow-100 active:scale-95 transition-transform disabled:opacity-50"
+            className="p-4 bg-yellow-400 text-yellow-900 rounded-3xl font-black shadow-2xl shadow-yellow-100 active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center"
           >
             {isBoosting ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} fill="currentColor" />}
           </button>

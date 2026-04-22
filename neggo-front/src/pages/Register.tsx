@@ -34,35 +34,35 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white px-6 py-8 flex flex-col">
-      <button onClick={() => navigate(-1)} className="mb-8 p-1 -ml-2 text-gray-400">
-        <ArrowLeft size={24} />
-      </button>
+    <div className="min-h-screen bg-white px-6 py-8 flex flex-col items-center justify-center">
+      <div className="w-full max-w-sm">
+        <button onClick={() => navigate(-1)} className="mb-6 p-2 -ml-2 text-gray-400 hover:text-gray-900 transition-colors">
+          <ArrowLeft size={24} />
+        </button>
 
-      <div className="flex-1">
-        <div className="mb-10">
+        <div className="mb-8">
           <img src="/neggo.png" alt="Neggo" className="h-10 w-auto mb-4 object-contain" referrerPolicy="no-referrer" />
-          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">{t('register')}</h1>
-          <p className="text-gray-500 font-medium">{t('register_subtitle')}</p>
+          <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">{t('register')}</h1>
+          <p className="text-gray-500 font-medium text-sm">{t('register_subtitle')}</p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold border border-red-100">
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-[10px] font-black uppercase tracking-tight border border-red-100">
               {error}
             </div>
           )}
           
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">{t('full_name')}</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest">{t('full_name')}</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="text" 
                 placeholder={t('full_name')}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-gray-100 border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-100/50 border border-transparent rounded-xl py-3.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 required
                 disabled={isLoading}
               />
@@ -70,15 +70,15 @@ export const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">{t('email')}</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest">{t('email')}</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="email" 
                 placeholder="seu@email.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-gray-100 border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-100/50 border border-transparent rounded-xl py-3.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 required
                 disabled={isLoading}
               />
@@ -86,15 +86,15 @@ export const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">{t('phone')}</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest">{t('phone')}</label>
             <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="tel" 
                 placeholder="Ex: +55 11 99999-9999"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-gray-100 border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-100/50 border border-transparent rounded-xl py-3.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 required
                 disabled={isLoading}
               />
@@ -102,15 +102,15 @@ export const Register: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">{t('password')}</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest">{t('password')}</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="password" 
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-gray-100 border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-100/50 border border-transparent rounded-xl py-3.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 required
                 disabled={isLoading}
               />
@@ -120,7 +120,7 @@ export const Register: React.FC = () => {
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-50 mt-6"
+            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-xl shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-50 mt-6"
           >
             {isLoading ? (
               <Loader2 className="animate-spin" size={20} />
@@ -132,12 +132,12 @@ export const Register: React.FC = () => {
             )}
           </button>
         </form>
-      </div>
 
-      <div className="text-center mt-8">
-        <p className="text-sm text-gray-500">
-          {t('already_have_account')} <button onClick={() => navigate('/login')} className="font-bold text-blue-600">{t('login')}</button>
-        </p>
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500 font-medium">
+            {t('already_have_account')} <button onClick={() => navigate('/login')} className="font-black text-blue-600 hover:underline">{t('login')}</button>
+          </p>
+        </div>
       </div>
     </div>
   );

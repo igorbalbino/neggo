@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /explore
+Allow: /ad/
+
+Disallow: /chat/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /my-ads/
+Disallow: /favorites/
+
+Sitemap: https://neggo.creatioinc.com/sitemap.xml

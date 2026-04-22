@@ -17,7 +17,6 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 export const authenticateWithFirebase = async (customToken: string) => {
-  if (!auth) return null;
   try {
     const userCredential = await signInWithCustomToken(auth, customToken);
     console.log('Firebase Auth Success:', userCredential.user.uid);

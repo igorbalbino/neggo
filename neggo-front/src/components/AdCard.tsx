@@ -72,22 +72,22 @@ export const AdCard: React.FC<AdCardProps> = ({ ad, className }) => {
         </button>
       </div>
       
-      <div className="p-3">
-        <h3 className="font-medium text-gray-900 line-clamp-2 text-sm leading-tight mb-1 h-10">
+      <div className="p-2 md:p-3">
+        <h3 className="font-bold text-gray-900 line-clamp-2 text-[13px] md:text-sm leading-tight mb-1 h-8 md:h-10">
           {ad.title}
         </h3>
-        <p className="text-lg font-bold text-gray-900 mb-2">
+        <p className="text-base md:text-lg font-black text-gray-900 mb-1.5 md:mb-2">
           {formattedPrice}
         </p>
-        <div className="flex items-center text-gray-400 text-[11px]">
-          <MapPin size={12} className="mr-1" />
+        <div className="flex items-center text-gray-400 text-[10px] md:text-[11px] font-bold">
+          <MapPin size={10} className="mr-1 flex-shrink-0" />
           <span className="truncate">
             {ad.isNational ? (
-              'Atende todo o país'
-            ) : ad.locations.length > 0 ? (
-              `${ad.locations[0].city}${ad.locations.length > 1 ? ` +${ad.locations.length - 1} locais` : ''}`
+              t('serves_national')
+            ) : ad.locations && ad.locations.length > 0 ? (
+              `${ad.locations[0].city}${ad.locations.length > 1 ? ` +${ad.locations.length - 1} ${t('more_locations')}` : ''}`
             ) : (
-              'Localização não informada'
+              t('no_location')
             )}
           </span>
         </div>

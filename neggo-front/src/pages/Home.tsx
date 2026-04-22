@@ -77,29 +77,29 @@ export const Home: React.FC = () => {
             </div>
 
             {/* Quick Filters */}
-            <section className="flex gap-3 mb-8">
+            <section className="flex gap-2 min-[400px]:gap-3 mb-6 md:mb-8 overflow-x-auto pb-1 scrollbar-hide">
               <button 
                 onClick={() => setActiveType(activeType === 'product' ? null : 'product')}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-4 rounded-3xl font-bold active:scale-95 transition-all border shadow-sm",
+                  "flex-1 flex items-center justify-center gap-2 py-3.5 md:py-4 px-4 min-w-[140px] rounded-2xl md:rounded-3xl font-black text-sm active:scale-95 transition-all border shadow-sm",
                   activeType === 'product' 
                     ? "bg-blue-600 border-blue-600 text-white shadow-blue-100" 
-                    : "bg-white border-gray-50 text-gray-700"
+                    : "bg-white border-gray-50 text-gray-500"
                 )}
               >
-                <Package size={20} />
+                <Package size={18} />
                 {t('products')}
               </button>
               <button 
                 onClick={() => setActiveType(activeType === 'service' ? null : 'service')}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-4 rounded-3xl font-bold active:scale-95 transition-all border shadow-sm",
+                  "flex-1 flex items-center justify-center gap-2 py-3.5 md:py-4 px-4 min-w-[140px] rounded-2xl md:rounded-3xl font-black text-sm active:scale-95 transition-all border shadow-sm",
                   activeType === 'service' 
                     ? "bg-purple-600 border-purple-600 text-white shadow-purple-100" 
-                    : "bg-white border-gray-50 text-gray-700"
+                    : "bg-white border-gray-50 text-gray-500"
                 )}
               >
-                <Briefcase size={20} />
+                <Briefcase size={18} />
                 {t('services')}
               </button>
             </section>
