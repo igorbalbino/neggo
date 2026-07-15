@@ -1,7 +1,7 @@
 import { Ad, User, Location, Plan } from '../types';
 import { authenticateWithFirebase } from './firebase';
 
-const API_BASE_URL = 'https://api-neggo.creatioinc.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api-neggo.creatioinc.com/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -21,10 +21,18 @@ class ApiService {
     return this.token;
   }
 
-  logout() {
-    this.token = null;
-    localStorage.removeItem('neggo_token');
-    localStorage.removeItem('neggo_chat_token');
+  async logout() {
+    try {
+      if (this.token) {
+        await this.request<void>('/auth/logout', { method: 'POST' });
+      }
+    } catch {
+      // Ignore network/auth errors on logout — always clear local session.
+    } finally {
+      this.token = null;
+      localStorage.removeItem('neggo_token');
+      localStorage.removeItem('neggo_chat_token');
+    }
   }
 
   isAuthenticated() {

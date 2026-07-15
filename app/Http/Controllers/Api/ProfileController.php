@@ -43,7 +43,11 @@ class ProfileController extends Controller
             $user->phone = $data['phone'];
         }
         if (array_key_exists('photoUrl', $data)) {
-            $user->photo_url = $data['photoUrl'];
+            $photoUrl = $data['photoUrl'];
+            if ($photoUrl !== null && $photoUrl !== '' && ! $this->isAllowedUploadUrl((string) $photoUrl)) {
+                return $this->fail('Invalid photo URL.', 422);
+            }
+            $user->photo_url = $photoUrl;
         }
 
         $user->save();
@@ -57,6 +61,15 @@ class ProfileController extends Controller
             'phone' => $user->phone,
             'plan' => $this->resolveCurrentPlanName((int) $user->id),
         ]);
+    }
+
+    private function isAllowedUploadUrl(string $url): bool
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+        $legacy = $appUrl.'/img/';
+        $storage = $appUrl.'/storage/img/';
+
+        return str_starts_with($url, $storage) || str_starts_with($url, $legacy);
     }
 
     private function resolveCurrentPlanName(int $userId): string

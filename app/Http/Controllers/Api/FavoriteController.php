@@ -73,7 +73,6 @@ class FavoriteController extends Controller
                 'photoUrl' => $ad->seller->photo_url,
                 'rating' => $ad->seller->rating,
                 'isPro' => $ad->seller->is_pro,
-                'phone' => $ad->seller->phone,
             ] : null,
         ];
     }

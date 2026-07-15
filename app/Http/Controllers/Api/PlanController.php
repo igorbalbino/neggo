@@ -49,12 +49,18 @@ class PlanController extends Controller
 
     public function buy(Request $request, Plan $plan)
     {
+        if (! $plan->is_active) {
+            return $this->fail('Plan not available.', 404);
+        }
+
         Stripe::setApiKey((string) env('STRIPE_SECRET_KEY'));
 
         $priceId = $this->resolveStripePriceIdForPlan($plan);
         if (!$priceId) {
             return $this->fail('Stripe price ID não configurado para este plano.', 500);
         }
+
+        $user = $request->user();
 
         $session = Session::create([
             'mode' => 'subscription',
@@ -64,19 +70,29 @@ class PlanController extends Controller
             ]],
             'success_url' => env('FRONTEND_URL', 'http://localhost:5173').'/plans?success=1',
             'cancel_url' => env('FRONTEND_URL', 'http://localhost:5173').'/plans?cancelled=1',
+            'client_reference_id' => (string) $user->id,
+            'customer_email' => $user->email,
+            'metadata' => [
+                'kind' => 'plan',
+                'user_id' => (string) $user->id,
+                'plan_id' => (string) $plan->id,
+            ],
+            'subscription_data' => [
+                'metadata' => [
+                    'user_id' => (string) $user->id,
+                    'plan_id' => (string) $plan->id,
+                ],
+            ],
         ]);
 
         UserPlan::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'plan_id' => $plan->id,
             'stripe_session_id' => $session->id,
-            // Nota: ideal seria ativar via webhook; por ora deixamos ativo para destravar o app.
-            'status' => 'active',
-            'starts_at' => now(),
+            'status' => 'pending',
+            'starts_at' => null,
             'expires_at' => null,
         ]);
-
-        $request->user()->update(['is_pro' => true]);
 
         return $this->ok(['success' => true, 'checkoutUrl' => $session->url]);
     }

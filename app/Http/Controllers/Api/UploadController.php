@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Concerns\ApiResponds;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class UploadController extends Controller
@@ -16,26 +16,31 @@ class UploadController extends Controller
     {
         try {
             $data = $request->validate([
-                'file' => ['required', 'file', 'image', 'max:5120'],
+                'file' => ['required', 'file', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'],
             ]);
         } catch (ValidationException $e) {
             return $this->fail($e->getMessage(), 422);
         }
 
-        // $path = $data['file']->store('uploads', 'public');
+        $file = $data['file'];
+        $ext = strtolower((string) $file->extension());
+        $allowed = ['jpeg', 'jpg', 'png', 'webp', 'gif'];
 
-        // Build a URL that works even when APP_URL is missing the port.
-        // $url = rtrim($request->getSchemeAndHttpHost(), '/').'/storage/'.ltrim($path, '/');
+        if (! in_array($ext, $allowed, true)) {
+            return $this->fail('Invalid image type.', 422);
+        }
 
-		$filename = uniqid().'.'.$data['file']->getClientOriginalExtension();
+        $filename = Str::uuid()->toString().'.'.$ext;
+        $path = $file->storeAs('img', $filename, 'public');
 
-		$data['file']->move(public_path('img'), $filename);
+        if ($path === false) {
+            return $this->fail('Upload failed.', 500);
+        }
 
-		$url = rtrim($request->getSchemeAndHttpHost(), '/').'/img/'.$filename;
-		
+        $url = rtrim((string) config('app.url'), '/').'/storage/'.ltrim($path, '/');
+
         return $this->ok([
             'url' => $url,
         ]);
     }
 }
-

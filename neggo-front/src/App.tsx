@@ -28,7 +28,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import { useAuth } from './contexts/AuthContext';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
+  const { user, token, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -39,7 +39,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user) {
+  if (!user || !token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return <>{children}</>;

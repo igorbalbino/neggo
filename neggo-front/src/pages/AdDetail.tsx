@@ -10,12 +10,15 @@ import { ShareModal } from '../components/ShareModal';
 import { cn } from '../lib/utils';
 import { useChat } from '../contexts/ChatContext';
 import { SEO } from '../components/SEO';
+import { useAuth } from '../contexts/AuthContext';
+import { redirectToStripeCheckout } from '../lib/stripeCheckout';
 
 export const AdDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const { startChat } = useChat();
+  const { user } = useAuth();
   const [ad, setAd] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -43,12 +46,12 @@ export const AdDetail: React.FC = () => {
 
   const handleBoost = async () => {
     if (!ad || isBoosting) return;
+    if (!user || user.id !== ad.sellerId) return;
     setIsBoosting(true);
     try {
       const result = await api.boostAd(ad.id);
       
-      if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
+      if (redirectToStripeCheckout(result.checkoutUrl)) {
         return;
       }
 
@@ -304,7 +307,7 @@ export const AdDetail: React.FC = () => {
               )}
             </div>
             
-            {!ad.isBoosted && (
+            {!ad.isBoosted && user?.id === ad.sellerId && (
               <button 
                 onClick={handleBoost}
                 disabled={isBoosting}
@@ -346,7 +349,7 @@ export const AdDetail: React.FC = () => {
           </a>
         )}
         
-        {!ad.isBoosted && (
+        {!ad.isBoosted && user?.id === ad.sellerId && (
           <button 
             onClick={handleBoost}
             disabled={isBoosting}

@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { api } from '../services/api';
 import { Plan } from '../types';
 import { SEO } from '../components/SEO';
+import { redirectToStripeCheckout } from '../lib/stripeCheckout';
 
 export const Plans: React.FC = () => {
   const navigate = useNavigate();
@@ -35,8 +36,7 @@ export const Plans: React.FC = () => {
     try {
       const result = await api.buyPlan(planId);
       
-      if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
+      if (redirectToStripeCheckout(result.checkoutUrl)) {
         return;
       }
 

@@ -1,8 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken } from 'firebase/auth';
+import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Mock configuration - replace with real data later
 const firebaseConfig = {
   apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY || "",
   authDomain: "neggo-cca92.firebaseapp.com",
@@ -19,10 +18,16 @@ export const db = getFirestore(app);
 export const authenticateWithFirebase = async (customToken: string) => {
   try {
     const userCredential = await signInWithCustomToken(auth, customToken);
-    console.log('Firebase Auth Success:', userCredential.user.uid);
+    if (import.meta.env.DEV) {
+      console.log('Firebase Auth Success:', userCredential.user.uid);
+    }
     return userCredential.user;
   } catch (error) {
     console.error('Firebase Auth Error:', error);
     throw error;
   }
+};
+
+export const signOutFirebase = async () => {
+  await signOut(auth);
 };

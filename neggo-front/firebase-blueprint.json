@@ -1,4 +1,11 @@
+/**
+ * Publish these rules in Firebase Console → Firestore → Rules
+ * (or: firebase deploy --only firestore:rules)
+ *
+ * Mirrors firestore.rules at repo root.
+ */
 {
+  "note": "Use the firestore.rules file at the repository root. This blueprint is schema-only and must not be treated as security rules.",
   "entities": {
     "Chat": {
       "title": "Chat",

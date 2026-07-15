@@ -10,6 +10,7 @@ use Illuminate\Validation\Rules\Password;
 use App\Models\User;
 use App\Models\UserPlan;
 use Kreait\Firebase\Factory;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -20,7 +21,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', Password::min(8)],
+            'password' => ['required', Password::min(8)->mixedCase()->numbers()],
             'phone' => ['nullable', 'string', 'max:30'],
         ]);
 
@@ -42,17 +43,23 @@ class AuthController extends Controller
 
         /** @var User $user */
         $user = $request->user();
+        $user->tokens()->delete();
         $token = $user->createToken('neggo-session')->plainTextToken;
-		
-		// $secret_file = base_path()."\\neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json";
-		$secret_file = storage_path('app/private/neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json');
-    
-		$firebase = (new Factory)
-			->withServiceAccount($secret_file)
-			->createAuth();
 
-		$customChatToken = $firebase->createCustomToken((string) $user->id);
-		$customChatToken = $customChatToken->toString();
+        $secretFile = (string) env(
+            'FIREBASE_CREDENTIALS',
+            storage_path('app/private/neggo-cca92-firebase-adminsdk-fbsvc-08a57c1b0c.json')
+        );
+
+        try {
+            $firebase = (new Factory)
+                ->withServiceAccount($secretFile)
+                ->createAuth();
+
+            $customChatToken = $firebase->createCustomToken((string) $user->id)->toString();
+        } catch (\Throwable $e) {
+            return $this->fail('Chat service unavailable.', 503);
+        }
 
         return $this->ok([
             'id' => (string) $user->id,
@@ -69,6 +76,17 @@ class AuthController extends Controller
                 'plan' => $this->resolveCurrentPlanName((int) $user->id),
             ],
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        /** @var PersonalAccessToken|null $token */
+        $token = $request->user()?->currentAccessToken();
+        if ($token) {
+            $token->delete();
+        }
+
+        return $this->ok(null);
     }
 
     private function resolveCurrentPlanName(int $userId): string

@@ -8,6 +8,7 @@ use App\Models\Ad;
 use App\Models\AdBoost;
 use App\Models\UserPlan;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
 
@@ -17,6 +18,8 @@ class AdController extends Controller
 
     public function index()
     {
+        $this->expireBoosts();
+
         $ads = Ad::query()
             ->with('seller')
             ->where('status', 'active')
@@ -40,8 +43,21 @@ class AdController extends Controller
         return $this->ok($ads);
     }
 
-    public function show(Ad $ad)
+    public function show(Request $request, Ad $ad)
     {
+        if ($ad->status !== 'active') {
+            $token = $request->bearerToken();
+            $ownerId = null;
+            if ($token) {
+                $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+                $ownerId = $accessToken?->tokenable?->id;
+            }
+
+            if ((int) $ownerId !== (int) $ad->seller_id) {
+                return $this->fail('Ad not found.', 404);
+            }
+        }
+
         $ad->load('seller');
 
         return $this->ok($this->transformAd($ad));
@@ -61,21 +77,31 @@ class AdController extends Controller
             }
         }
 
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
-            'price' => ['nullable'],
-            'isNational' => ['required', 'boolean'],
-            'locations' => ['nullable', 'array'],
-            'type' => ['required', 'in:product,service'],
-            'category' => ['required', 'string', 'max:100'],
-            'images' => ['nullable', 'array'],
-            'condition' => ['nullable', 'in:new,used'],
-            'serviceType' => ['nullable', 'in:remote,in_person'],
-        ]);
+        try {
+            $data = $request->validate([
+                'title' => ['required', 'string', 'max:255'],
+                'description' => ['required', 'string'],
+                'price' => ['nullable'],
+                'isNational' => ['required', 'boolean'],
+                'locations' => ['nullable', 'array'],
+                'type' => ['required', 'in:product,service'],
+                'category' => ['required', 'string', 'max:100'],
+                'images' => ['nullable', 'array'],
+                'images.*' => ['string', 'max:2048'],
+                'condition' => ['nullable', 'in:new,used'],
+                'serviceType' => ['nullable', 'in:remote,in_person'],
+            ]);
+        } catch (ValidationException $e) {
+            return $this->fail($e->getMessage(), 422);
+        }
 
-        $ad = Ad::create([
-            'seller_id' => $request->user()->id,
+        foreach ($data['images'] ?? [] as $imageUrl) {
+            if (! $this->isAllowedUploadUrl((string) $imageUrl)) {
+                return $this->fail('Invalid image URL.', 422);
+            }
+        }
+
+        $ad = new Ad([
             'title' => $data['title'],
             'description' => $data['description'],
             'price' => is_numeric($data['price'] ?? null) ? (float) $data['price'] : null,
@@ -88,7 +114,8 @@ class AdController extends Controller
             'condition' => $data['condition'] ?? null,
             'service_type' => $data['serviceType'] ?? null,
         ]);
-
+        $ad->seller_id = $request->user()->id;
+        $ad->save();
         $ad->load('seller');
 
         return $this->ok($this->transformAd($ad));
@@ -112,8 +139,6 @@ class AdController extends Controller
 
         $key = mb_strtolower(trim($planName));
 
-        // Limits requested:
-        // free: 2, essencial: 5, profissional: 25, empresarial: unlimited
         return match ($key) {
             'free' => 2,
             'essencial' => 5,
@@ -142,6 +167,8 @@ class AdController extends Controller
 
         Stripe::setApiKey((string) env('STRIPE_SECRET_KEY'));
 
+        $user = $request->user();
+
         $session = Session::create([
             'mode' => 'payment',
             'line_items' => [[
@@ -154,20 +181,70 @@ class AdController extends Controller
             ]],
             'success_url' => env('FRONTEND_URL', 'http://localhost:5173').'/plans?boost=success',
             'cancel_url' => env('FRONTEND_URL', 'http://localhost:5173').'/plans?boost=cancelled',
+            'client_reference_id' => (string) $user->id,
+            'customer_email' => $user->email,
+            'metadata' => [
+                'kind' => 'boost',
+                'user_id' => (string) $user->id,
+                'ad_id' => (string) $ad->id,
+            ],
         ]);
 
         AdBoost::create([
             'ad_id' => $ad->id,
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'stripe_session_id' => $session->id,
-            'status' => 'created',
-            'starts_at' => now(),
-            'ends_at' => now()->addDays((int) env('AD_BOOST_DURATION_DAYS', 7)),
+            'status' => 'pending',
+            'starts_at' => null,
+            'ends_at' => null,
         ]);
 
-        $ad->update(['is_boosted' => true]);
-
         return $this->ok(['success' => true, 'checkoutUrl' => $session->url]);
+    }
+
+    private function expireBoosts(): void
+    {
+        $expiredAdIds = AdBoost::query()
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<', now())
+            ->whereIn('status', ['paid', 'active', 'created'])
+            ->pluck('ad_id')
+            ->unique()
+            ->all();
+
+        if ($expiredAdIds === []) {
+            return;
+        }
+
+        AdBoost::query()
+            ->whereIn('ad_id', $expiredAdIds)
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<', now())
+            ->whereIn('status', ['paid', 'active', 'created'])
+            ->update(['status' => 'expired']);
+
+        foreach ($expiredAdIds as $adId) {
+            $stillActive = AdBoost::query()
+                ->where('ad_id', $adId)
+                ->whereIn('status', ['paid', 'active'])
+                ->where(function ($query): void {
+                    $query->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                })
+                ->exists();
+
+            if (! $stillActive) {
+                Ad::query()->whereKey($adId)->update(['is_boosted' => false]);
+            }
+        }
+    }
+
+    private function isAllowedUploadUrl(string $url): bool
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+        $legacy = $appUrl.'/img/';
+        $storage = $appUrl.'/storage/img/';
+
+        return str_starts_with($url, $storage) || str_starts_with($url, $legacy);
     }
 
     private function transformAd(Ad $ad): array
@@ -194,7 +271,6 @@ class AdController extends Controller
                 'photoUrl' => $ad->seller->photo_url,
                 'rating' => $ad->seller->rating,
                 'isPro' => $ad->seller->is_pro,
-                'phone' => $ad->seller->phone,
             ] : null,
         ];
     }

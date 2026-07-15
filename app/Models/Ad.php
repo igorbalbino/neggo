@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Ad extends Model
 {
     protected $fillable = [
-        'seller_id',
         'title',
         'description',
         'price',
@@ -21,8 +20,6 @@ class Ad extends Model
         'category',
         'condition',
         'service_type',
-        'is_boosted',
-        'status',
     ];
 
     protected function casts(): array
