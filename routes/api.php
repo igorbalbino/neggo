@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\IntegrationTokenController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\StripeWebhookController;
@@ -42,4 +43,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function (): void {
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/ads/{ad}/favorite', [FavoriteController::class, 'toggle']);
+
+    Route::get('/integrations/scopes', [IntegrationTokenController::class, 'scopes']);
+    Route::get('/integrations/tokens', [IntegrationTokenController::class, 'index']);
+    Route::post('/integrations/tokens', [IntegrationTokenController::class, 'store']);
+    Route::delete('/integrations/tokens/{token}', [IntegrationTokenController::class, 'destroy']);
 });

@@ -183,6 +183,48 @@ class ApiService {
       method: 'POST',
     });
   }
+
+  // Integrations (MCP PAT)
+  async getIntegrationScopes(): Promise<Array<{ id: string; label: string; description: string }>> {
+    return this.request('/integrations/scopes');
+  }
+
+  async getIntegrationTokens(): Promise<Array<{
+    id: string;
+    name: string;
+    tokenPrefix: string;
+    scopes: string[];
+    expiresAt: string | null;
+    lastUsedAt: string | null;
+    createdAt: string | null;
+  }>> {
+    return this.request('/integrations/tokens');
+  }
+
+  async createIntegrationToken(data: { name: string; scopes: string[] }): Promise<{
+    token: string;
+    expiresAt: string | null;
+    expiresInDays: number;
+    integration: {
+      id: string;
+      name: string;
+      tokenPrefix: string;
+      scopes: string[];
+      expiresAt: string | null;
+    };
+    warning: string;
+  }> {
+    return this.request('/integrations/tokens', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async revokeIntegrationToken(id: string): Promise<void> {
+    await this.request(`/integrations/tokens/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiService();
